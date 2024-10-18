@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scVital"
-version = "0.0.3.5"
+version = "0.0.3.6"
 authors = [
   { name="Jonathan Rub", orcid = "0000-0001-8086-2310", email="jor4008@med.cornell.edu" },
 ]

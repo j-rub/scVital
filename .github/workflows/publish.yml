@@ -25,7 +25,9 @@ jobs:
         # hatch env run pip install -e .
       - name: Extract version
         id: get_version
-        run: echo "VERSION=$(python scripts/extratVersion.py)" >> $GITHUB_ENV
+        run: echo "VERSION=(python scripts/extractVersion.py)" >> $GITHUB_ENV
+      - name: Debug version
+        run: echo "Extracted version is $VERSION"
       - name: Run tests
         run: hatch env run pytest
 
@@ -102,7 +104,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       run: >-
         gh release create
-        'scVital-v${{ env.VERSION }}'
+        'scVital-v$VERSION'
         --repo '${{ github.repository }}'
         --notes ""
     - name: Upload artifact signatures to GitHub Release
@@ -113,5 +115,5 @@ jobs:
       # sigstore-produced signatures and certificates.
       run: >-
         gh release upload
-        'scVital-v${{ env.VERSION }}' dist/**
+        'scVital-v$VERSION' dist/**
         --repo '${{ github.repository }}'
