@@ -1,3 +1,3 @@
-from .scVital import helloWorld
+from .scVital import minusOne, plusOne, printTester, helloWorld
 
-__all__ = ['helloWorld']
+__all__ = ['minusOne', 'plusOne', 'printTester', 'helloWorld']
