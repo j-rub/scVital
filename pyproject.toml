@@ -23,7 +23,7 @@ dependencies = [
     "numpy",
     "pandas",
     "scanpy",
-    "pytorch"
+    "torch"
 ]
 
 [project.urls]
