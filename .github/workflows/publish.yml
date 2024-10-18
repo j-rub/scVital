@@ -15,11 +15,11 @@ jobs:
         with:
           python-version: '3.x'
       - name: Install dependencies
-        run: pip install setuptools wheel twine
+        run: pip install hatch
       - name: Build package
-        run: python setup.py sdist bdist_wheel
+        run: hatch build
       - name: Publish package
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: twine upload dist/*
+          HATCH_INDEX_USER: ${{ secrets.PYPI_USERNAME }}
+          HATCH_INDEX_AUTH: ${{ secrets.PYPI_PASSWORD }}
+        run: hatch publish
