@@ -22,7 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install hatch
           hatch env create
-          hatch env run pip install -e .
+        # hatch env run pip install -e .
       - name: Run tests
         run: hatch env run pytest
 
