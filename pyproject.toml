@@ -21,7 +21,6 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "pytest",
     "pandas",
     "scanpy",
     "torch"
@@ -33,3 +32,11 @@ Homepage = "https://github.com/j-rub/scVital"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest",
+    "numpy",
+    "pandas",
+    "scanpy",
+    "torch"
+]
