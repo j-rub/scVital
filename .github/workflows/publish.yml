@@ -61,8 +61,7 @@ jobs:
     permissions:
       contents: write  # IMPORTANT: mandatory for making GitHub Releases
       id-token: write  # IMPORTANT: mandatory for sigstore
-      contents: read
-
+      
     steps:
     - name: Download all the dists
       uses: actions/download-artifact@v4
