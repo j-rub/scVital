@@ -21,6 +21,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
+    "pytest",
     "pandas",
     "scanpy",
     "torch"

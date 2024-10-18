@@ -1,7 +1,7 @@
-from scVital.scVital import helloWorld
+import scVital as scVt
 
 def testHelloWorld():
-    assert helloWorld() == "Hello World"
+    assert scVt.helloWorld() == "Hello World"
 
 def testMinusOne():
-    assert minusOne(4) == 3
+    assert scVt.minusOne(4) == 3
