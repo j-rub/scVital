@@ -20,6 +20,6 @@ jobs:
         run: hatch build
       - name: Publish package
         env:
-          HATCH_INDEX_USER: __token__
+          HATCH_INDEX_USER: ${{ secrets.PYPI_USERNAME }}
           HATCH_INDEX_AUTH: ${{ secrets.PYPI_PASSWORD }}
         run: hatch publish
