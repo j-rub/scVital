@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scVital"
-version = "0.0.3.3"
+version = "0.0.3.4"
 authors = [
-  { name="Jonathan Rub", email="jor4008@med.cornell.edu" },
+  { name="Jonathan Rub", orcid = "0000-0001-8086-2310", email="jor4008@med.cornell.edu" },
 ]
-description = "Deep Learning ALrogithm for integration of scRNA-seq data"
+description = "Deep Learning Algorithm for cross-species integration of scRNA-seq data"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
