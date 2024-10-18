@@ -1,2 +1,1 @@
 # scVital
-scRNA-seq integration
