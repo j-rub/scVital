@@ -15,3 +15,5 @@ def printTester():
 def helloWorld():
 	return "Hello World"
 
+def thanksMarcus():
+	return "Thanks Marcus"
