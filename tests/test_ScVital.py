@@ -9,3 +9,6 @@ def testHelloWorld():
 
 def testMinusOne():
     assert scVt.minusOne(4) == 3
+
+def testThanksMarcus():
+    assert scVt.thanksMarcus() == "Thanks Marcus"
