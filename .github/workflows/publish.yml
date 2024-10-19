@@ -83,6 +83,20 @@ jobs:
       id-token: write  # IMPORTANT: mandatory for sigstore
 
     steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Install dependencies
+      run: pip install toml
+    - name: Extract version
+      id: get_version
+      run: echo "VERSION=$(python scripts/extractVersion.py)" >> $GITHUB_ENV
+    - name: Debug version
+      run: |
+        echo "Extracted version is $VERSION"
+        echo "Env version ${{ env.VERSION }}"
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
@@ -94,15 +108,6 @@ jobs:
         inputs: >-
           ./dist/*.tar.gz
           ./dist/*.whl
-    - name: Install dependencies
-      run: pip install toml
-    - name: Extract version
-      id: get_version
-      run: echo "VERSION=$(python scripts/extractVersion.py)" >> $GITHUB_ENV
-    - name: Debug version
-      run: |
-        echo "Extracted version is $VERSION"
-        echo "Env version ${{ env.VERSION }}"
     - name: Create GitHub Release
       env:
         GITHUB_TOKEN: ${{ github.token }}
