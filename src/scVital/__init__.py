@@ -1,3 +1,3 @@
-from .scVital import minusOne, plusOne, printTester, helloWorld, thanksMarcus
+from .scVital import runScVital, scVitalModel, runTrainScVital
 
-__all__ = ['minusOne', 'plusOne', 'printTester', 'helloWorld', "ThanksMarcus"]
+__all__ = ['runScVital', 'scVitalModel', 'runTrainScVital']
