@@ -12,7 +12,7 @@ import warnings
 import scVital as scVt
 
 @pytest.fixture
-def setup_data():
+def setupData():
     counts = csr_matrix(np.random.poisson(1, size=(100, 2000)), dtype=np.float32)
 
     adata = an.AnnData(counts)
@@ -21,8 +21,8 @@ def setup_data():
     bt = np.random.choice(["b1", "b2"], size=(adata.n_obs,))
     adata.obs["batch"] = pd.Categorical(bt)  # Categoricals are preferred for efficiency
 
-    ct = np.random.choice(["m", "h"], size=(adata.n_obs,))
-    adata.obs["species"] = pd.Categorical(ct)  # Categoricals are preferred for efficiency
+    ct = np.random.choice(["ct1", "ct2"], size=(adata.n_obs,))
+    adata.obs["cellType"] = pd.Categorical(ct)  # Categoricals are preferred for efficiency
 
     return {
         'adata': adata,
@@ -44,45 +44,45 @@ def setup_data():
         'verbose': True
     }
 
-def test_invalid_adata(setup_data):
+def test_invalid_adata(setupData):
     with pytest.raises(ValueError):
-        scVt.makeScVital(None, setup_data['batchLabel'])
+        scVt.makeScVital(None, setupData['batchLabel'])
 
-def test_invalid_batchLabel(setup_data):
+def test_invalid_batchLabel(setupData):
     with pytest.raises(ValueError):
-        scVt.makeScVital(setup_data['adata'], 123)
+        scVt.makeScVital(setupData['adata'], 123)
 
-def test_invalid_miniBatchSize(setup_data):
+def test_invalid_miniBatchSize(setupData):
     with pytest.raises(ValueError):
-        scVt.makeScVital(setup_data['adata'], setup_data['batchLabel'], miniBatchSize=-1)
+        scVt.makeScVital(setupData['adata'], setupData['batchLabel'], miniBatchSize=-1)
 
-def test_high_learningRate_warning(setup_data):
+def test_high_learningRate_warning(setupData):
     with pytest.warns(UserWarning):
-        scVt.makeScVital(setup_data['adata'], setup_data['batchLabel'], learningRate=2e0)
+        scVt.makeScVital(setupData['adata'], setupData['batchLabel'], learningRate=2e0)
 
-def test_valid_makeScVital(setup_data):
-    model = scVt.makeScVital(**setup_data)
+def test_valid_makeScVital(setupData):
+    model = scVt.makeScVital(**setupData)
     assert isinstance(model, scVt.scVitalModel)
 
-def test_scVital_initialization(setup_data):
+def test_scVital_initialization(setupData):
     model = scVt.scVitalModel(
-        setup_data['adata'], setup_data['batchLabel'], setup_data['miniBatchSize'], setup_data['numEpoch'], setup_data['learningRate'],
-        setup_data['hid1'], setup_data['hid2'], setup_data['latentSize'], setup_data['discHid'], 
-        setup_data['reconCoef'], setup_data['klCoef'], setup_data['discCoef'], setup_data['discIter'], 
-        setup_data['earlyStop'], setup_data['seed'], setup_data['verbose']
+        setupData['adata'], setupData['batchLabel'], setupData['miniBatchSize'], setupData['numEpoch'], setupData['learningRate'],
+        setupData['hid1'], setupData['hid2'], setupData['latentSize'], setupData['discHid'], 
+        setupData['reconCoef'], setupData['klCoef'], setupData['discCoef'], setupData['discIter'], 
+        setupData['earlyStop'], setupData['seed'], setupData['verbose']
     )
-    assert csr_matrix.sum(model.getAdata().X) == csr_matrix.sum(setup_data['adata'].X)
-    assert model.getBatchLabel() == setup_data['batchLabel']
-    assert model.getMiniBatchSize() == setup_data['miniBatchSize']
-    assert model.getNumEpoch() == setup_data['numEpoch']
-    assert model.getLearningRate() == setup_data['learningRate']
-    assert model.getLayerDims() == [len(setup_data['adata'].var_names), setup_data['hid1'], setup_data['hid2'], setup_data['latentSize']]
-    assert model.getLatentSize() == setup_data['latentSize']
-    assert model.getDiscDims() == [setup_data['latentSize'], setup_data['discHid'], 2] 
-    assert model.getReconCoef() == (len(setup_data['adata'])**0.5)*setup_data['reconCoef']
-    assert model.getKlCoef() == setup_data['klCoef']
-    assert model.getDiscCoef() == setup_data['discCoef']
-    assert model.getDiscIter() == setup_data['discIter']
-    assert model.getEarlyStop() == setup_data['earlyStop']
-    #assert model.seed == setup_data['seed']
-    #assert model.verbose == setup_data['verbose']
+    assert csr_matrix.sum(model.getAdata().X) == csr_matrix.sum(setupData['adata'].X)
+    assert model.getBatchLabel() == setupData['batchLabel']
+    assert model.getMiniBatchSize() == setupData['miniBatchSize']
+    assert model.getNumEpoch() == setupData['numEpoch']
+    assert model.getLearningRate() == setupData['learningRate']
+    assert model.getLayerDims() == [len(setupData['adata'].var_names), setupData['hid1'], setupData['hid2'], setupData['latentSize']]
+    assert model.getLatentSize() == setupData['latentSize']
+    assert model.getDiscDims() == [setupData['latentSize'], setupData['discHid'], 2] 
+    assert model.getReconCoef() == (len(setupData['adata'])**0.5)*setupData['reconCoef']
+    assert model.getKlCoef() == setupData['klCoef']
+    assert model.getDiscCoef() == setupData['discCoef']
+    assert model.getDiscIter() == setupData['discIter']
+    assert model.getEarlyStop() == setupData['earlyStop']
+    #assert model.seed == setupData['seed']
+    #assert model.verbose == setupData['verbose']

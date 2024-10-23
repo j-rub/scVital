@@ -243,11 +243,11 @@ class scVitalModel(object):
 		autoencoderOut.eval()
 		encoderOut = autoencoderOut.getEncoder()
 		encoderOut.eval()
-		discriminator.eval()
+		discriminatorOut.eval()
 
 		# Prepare one-hot encoded labels
 		LabOneHot = torch.reshape(F.one_hot(self.__inLabels.to(torch.int64), num_classes=self.__numSpeices).float(), (self.__LabeledData.shape[0], self.__numSpeices))#inData.shape[0]
-		labOneHotInData = torch.cat((self.__LabeledData, LabOneHot), axis=1)
+		labOneHotInData = torch.cat((model.getLabeledData()[:,1:], LabOneHot), axis=1)
 
 		# Get latent representations and reconstructed data
 		allEncOut = encoderOut(labOneHotInData)
@@ -326,6 +326,8 @@ class scVitalModel(object):
 
 				for i in labels: # for every batch
 					sCells = (bRealLabels==i).reshape((allCells,1))	   #Cells realting to label
+                    #sGenes = torch.tensor(bool(batchSpecLabIndex[i])).reshape((1, allGenes))
+
 					sGenes = torch.tensor(batchSpecLabIndex[i]).reshape((1,allGenes))	 #Genes relating to label
 					numCells, numGenes = torch.sum(sCells), torch.sum(sGenes,axis=1)	  #number of cells and genes in of the label
 					sMask = sCells * sGenes	   #tensor of the mask to only take the genes realting to labels for the same cells
@@ -505,7 +507,7 @@ class scVitalModel(object):
 		batchSpecLabIndex = []
 		for batchLab in uniqueBatch:
 			speciesSpecGenes = np.logical_or(geneType == "all", geneType == batchSpeciesDict[batchLab])
-			batchSpecLabIndex.append(list(speciesSpecGenes))
+			batchSpecLabIndex.append(np.array(list(speciesSpecGenes), dtype=bool))
 
 		return inData, inLabels, batchSpecLabIndex
 
@@ -523,6 +525,9 @@ class scVitalModel(object):
 	def getAdata(self):
 		"""Return the annotated data matrix."""
 		return self.__adata
+
+	def getLabeledData(self):
+		return self.__LabeledData
 
 	def getBatchLabel(self):
 		"""Return the batch label."""

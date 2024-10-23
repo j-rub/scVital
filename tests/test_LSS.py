@@ -19,7 +19,7 @@ def mock_data():
 	counts = csr_matrix(np.random.poisson(1, size=(100, 2000)), dtype=np.float32)
 	latent = 'X_pca'
 	batchName = 'batch'
-	cellTypeLabel = 'cell_type'
+	cellTypeLabel = 'cellType'
 
 	adata = an.AnnData(counts)
 	adata.obs_names = [f"Cell_{i:d}" for i in range(adata.n_obs)]
