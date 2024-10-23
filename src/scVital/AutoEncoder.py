@@ -15,7 +15,7 @@ class EncoderDecoder(nn.Module):
         #labelsOneHot = F.one_hot(labels, num_classes=num_classes).float()
         labelsOneHot = torch.reshape(F.one_hot(labels.to(torch.int64), num_classes=num_classes).float(),(latent.shape[0], num_classes))
         encOutLabel = torch.cat((latent, labelsOneHot),axis=1)
-        decOut = self.decoder(encOutLabel)                 
+        decOut = self.decoder(encOutLabel)
         return decOut
     
     def getEncoder(self):
@@ -37,7 +37,7 @@ class Encoder(nn.Module):
             #nn.Dropout(0.05),
             nn.ReLU() #nn.LeakyReLU(0.1)
         )
-        self.hidden1 = nn.Sequential(            
+        self.hidden1 = nn.Sequential(         
             nn.Linear(dims[1], dims[2], bias=True),
             nn.LayerNorm(dims[2]),
             #nn.BatchNorm1d(dims[2]),
@@ -75,7 +75,7 @@ class Decoder(nn.Module):
             #nn.BatchNorm1d(dims[2]),
             nn.ReLU() #nn.LeakyReLU(0.1)
         )
-        self.hidden1 = nn.Sequential(            
+        self.hidden1 = nn.Sequential(         
             nn.Linear(dims[2], dims[1], bias=True),
             #nn.BatchNorm1d(dims[1]),
             nn.ReLU() #nn.LeakyReLU(0.1)

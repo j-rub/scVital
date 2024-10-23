@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #run train DL model
+#comments and error checking amde with the help of copilot
+
 import os
 import sys
 import time
@@ -151,44 +153,53 @@ class scVitalModel(object):
 		seed (int): Random seed for reproducibility.
 		verbose (bool): Flag for verbosity.
 		"""
-		self.adata = adata
-		self.batchLabel = batchLabel
-		self.miniBatchSize = miniBatchSize
-		self.numEpoch = numEpoch
-		self.learningRate = learningRate
-		self.hid1 = hid1
-		self.hid2 = hid2
-		self.latentSize = latentSize
-		self.discHid = discHid
-		self.reconCoef = reconCoef
-		self.klCoef = klCoef
-		self.discCoef = discCoef
-		self.discIter = discIter
-		self.earlyStop = earlyStop
-		self.seed = seed
-		self.verbose = verbose
-
+		self.__adata = adata
+		self.__batchLabel = batchLabel
+		self.__miniBatchSize = miniBatchSize
+		self.__numEpoch = numEpoch
+		self.__learningRate = learningRate
+		self.__hid1 = hid1
+		self.__hid2 = hid2
+		self.__latentSize = latentSize
+		self.__discHid = discHid
+		self.__reconCoef = reconCoef
+		self.__klCoef = klCoef
+		self.__discCoef = discCoef
+		self.__discIter = discIter
+		self.__earlyStop = earlyStop
+		self.__seed = seed
+		self.__verbose = verbose
+		self.__lossDict = {"total":[],"recon":[],"trick":[],"klDiv":[],"discr":[]}
 		# Set the random seed for reproducibility
 		torch.manual_seed(seed)
 
 		# Get training data and labels
 		inData, inLabels, batchSpecLabIndex = self._getTrainLabel(speciesLabel="species")
 
-		self.inLabels = inLabels
-		self.batchSpecLabIndex = batchSpecLabIndex
+		self.__inLabels = inLabels
+		self.__batchSpecLabIndex = batchSpecLabIndex
 
 		# Prepare data by appending labels
 		LabeledData, layer1Dim, numSpeices = self._getLabeledData(inData, inLabels)
-		self.LabeledData = LabeledData
-		self.numSpeices = numSpeices
+		self.__LabeledData = LabeledData
+		self.__numSpeices = numSpeices
 
 		# Define layer dimensions
-		self.layerDims = [layer1Dim, hid1, hid2, latentSize]
-		self.inDiscriminatorDims = [latentSize, discHid]
+		self.__layerDims = [layer1Dim, hid1, hid2, latentSize]
+		self.__inDiscriminatorDims = [latentSize, discHid]
 
 		# Adjust reconstruction coefficient
-		self.reconCoef = self.reconCoef * (inData.shape[0] ** 0.5)
+		self.__reconCoef = self.__reconCoef * (inData.shape[0] ** 0.5)
 
+		# Initialize encoder and decoder
+		encoder = ae.Encoder(self.__layerDims, self.__numSpeices)
+		decoder = ae.Decoder(self.__layerDims, self.__numSpeices, geneIndexes=self.__batchSpecLabIndex)
+
+		# Initialize autoencoder
+		self.__autoencoder = ae.EncoderDecoder(encoder, decoder)
+	
+		# Initialize discriminator
+		self.__discriminator = dis.Discriminator(self.__inDiscriminatorDims, self.__numSpeices)
 
 	def runTrainScVital(self):
 		"""
@@ -199,40 +210,34 @@ class scVitalModel(object):
 		the latent representations and reconstructed data in an AnnData object.
 
 		Attributes:
-			self.layerDims (list): Dimensions of the layers for the encoder and decoder.
-			self.numSpeices (int): Number of species (classes) in the dataset.
-			self.batchSpecLabIndex (list): Indexes for batch-specific labels.
-			self.learningRate (float): Learning rate for the optimizers.
-			self.inDiscriminatorDims (list): Dimensions of the layers for the discriminator.
-			self.inLabels (torch.Tensor): Input labels for the data.
-			self.LabeledData (torch.Tensor): Labeled data for training.
-			self.adata (AnnData): AnnData object to store the results.
+			self.__layerDims (list): Dimensions of the layers for the encoder and decoder.
+			self.__numSpeices (int): Number of species (classes) in the dataset.
+			self.__batchSpecLabIndex (list): Indexes for batch-specific labels.
+			self.__learningRate (float): Learning rate for the optimizers.
+			self.__inDiscriminatorDims (list): Dimensions of the layers for the discriminator.
+			self.__inLabels (torch.Tensor): Input labels for the data.
+			self.__LabeledData (torch.Tensor): Labeled data for training.
+			self.__adata (AnnData): AnnData object to store the results.
 		"""
-		# Initialize encoder and decoder
-		encoder = ae.Encoder(self.layerDims, self.numSpeices)
-		decoder = ae.Decoder(self.layerDims, self.numSpeices, geneIndexes=self.batchSpecLabIndex)
-
 		# Initialize autoencoder
-		autoencoder = ae.EncoderDecoder(encoder, decoder)
-		autoencoderOpt = optim.AdamW(params=autoencoder.parameters(), lr=self.learningRate)
+		autoencoderOpt = optim.AdamW(params=self.__autoencoder.parameters(), lr=self.__learningRate)
 		aeSchedLR = optim.lr_scheduler.CosineAnnealingWarmRestarts(autoencoderOpt, T_0=5, T_mult=2)
 		reconstructionLossFunc = torch.nn.MSELoss()
 
 		# Initialize discriminator
-		discriminator = dis.Discriminator(self.inDiscriminatorDims, self.numSpeices)
-		discriminatorOpt = optim.AdamW(params=discriminator.parameters(), lr=self.learningRate)
+		discriminatorOpt = optim.AdamW(params=self.__discriminator.parameters(), lr=self.__learningRate)
 		discSchedLR = optim.lr_scheduler.CosineAnnealingWarmRestarts(discriminatorOpt, T_0=5, T_mult=2)
 		discriminatorLossFunc = torch.nn.CrossEntropyLoss()
 
 		# Train the model
 		autoencoderOut, discriminatorOut, lossDict = self._trainScVital(
-			autoencoder, autoencoderOpt, reconstructionLossFunc, aeSchedLR,
-			discriminator, discriminatorOpt, discriminatorLossFunc, discSchedLR
+			self.__autoencoder, autoencoderOpt, reconstructionLossFunc, aeSchedLR,
+			self.__discriminator, discriminatorOpt, discriminatorLossFunc, discSchedLR
 		)
 
-		self.autoencoder = autoencoderOut
-		self.discriminator = discriminatorOut
-		self.lossDict = lossDict
+		self.__autoencoder = autoencoderOut
+		self.__discriminator = discriminatorOut
+		self.__lossDict = lossDict
 
 		# Set models to evaluation mode
 		autoencoderOut.eval()
@@ -241,17 +246,17 @@ class scVitalModel(object):
 		discriminator.eval()
 
 		# Prepare one-hot encoded labels
-		LabOneHot = torch.reshape(F.one_hot(self.inLabels.to(torch.int64), num_classes=self.numSpeices).float(), (self.LabeledData.shape[0], self.numSpeices))#inData.shape[0]
-		labOneHotInData = torch.cat((self.LabeledData, LabOneHot), axis=1)
+		LabOneHot = torch.reshape(F.one_hot(self.__inLabels.to(torch.int64), num_classes=self.__numSpeices).float(), (self.__LabeledData.shape[0], self.__numSpeices))#inData.shape[0]
+		labOneHotInData = torch.cat((self.__LabeledData, LabOneHot), axis=1)
 
 		# Get latent representations and reconstructed data
 		allEncOut = encoderOut(labOneHotInData)
 		bLatent = allEncOut.detach().numpy()
-		reconData = autoencoderOut(labOneHotInData, self.inLabels, self.numSpeices).detach().numpy()
+		reconData = autoencoderOut(labOneHotInData, self.__inLabels, self.__numSpeices).detach().numpy()
 
 		# Store results in AnnData object
-		self.adata.obsm["X_scVital"] = bLatent
-		self.adata.layers["scVitalRecon"] = reconData
+		self.__adata.obsm["X_scVital"] = bLatent
+		self.__adata.layers["scVitalRecon"] = reconData
 
 
 	def _trainScVital(self, autoencoder, autoencoderOpt, reconstructionLossFunc, aeSchedLR,
@@ -259,21 +264,21 @@ class scVitalModel(object):
 		autoencoder.train()
 		discriminator.train()
 
-		ldTrainDataLoader = DataLoader(self.LabeledData, batch_size=self.miniBatchSize, shuffle=True)
+		ldTrainDataLoader = DataLoader(self.__LabeledData, batch_size=self.__miniBatchSize, shuffle=True)
 		numMiniBatch = len(ldTrainDataLoader)
 
-		discEpochLoss = np.full(self.numEpoch, np.nan)
-		reconstEpochLoss = np.full(self.numEpoch, np.nan)
-		trickEpochLoss = np.full(self.numEpoch, np.nan)
-		klDivEpochLoss = np.full(self.numEpoch, np.nan)
-		aeTotalEpochLoss = np.full(self.numEpoch, np.nan)
+		discEpochLoss = np.full(self.__numEpoch, np.nan)
+		reconstEpochLoss = np.full(self.__numEpoch, np.nan)
+		trickEpochLoss = np.full(self.__numEpoch, np.nan)
+		klDivEpochLoss = np.full(self.__numEpoch, np.nan)
+		aeTotalEpochLoss = np.full(self.__numEpoch, np.nan)
 
 		prevTotalLoss = np.inf
 
 		#KL Divergenace Cyclical Annealing
-		klDivCoeff = self._klCycle(0, self.klCoef, self.numEpoch)
+		klDivCoeff = self._klCycle(0, self.__klCoef, self.__numEpoch)
 
-		for iEp in range(self.numEpoch):
+		for iEp in range(self.__numEpoch):
 
 			discTrainLoss = np.full(numMiniBatch, np.nan) 
 			reconstTrainLoss = np.full(numMiniBatch, np.nan)
@@ -285,7 +290,7 @@ class scVitalModel(object):
 				#Load data 
 				bRealLabels, bData = ldData[:,0].to(torch.int64), ldData[:,1:].to(torch.float32)
 				
-				bRealLabOneHot = F.one_hot(bRealLabels, num_classes=self.numSpeices).float()
+				bRealLabOneHot = F.one_hot(bRealLabels, num_classes=self.__numSpeices).float()
 				labeledBData = torch.cat((bData, bRealLabOneHot),axis=1)
 				labels = np.unique(bRealLabels)
 				
@@ -293,7 +298,7 @@ class scVitalModel(object):
 				#get mouse and human data in latent space
 				encoder = autoencoder.getEncoder()
 				#pdb.set_trace()
-				for i in range(self.discIter):
+				for i in range(self.__discIter):
 					bLatent = encoder(labeledBData) #bData
 					
 					#Optimize discriminator
@@ -310,7 +315,7 @@ class scVitalModel(object):
 				autoencoderOpt.zero_grad()
 				
 				#encode mouse and human data in latent space
-				bReconstData = autoencoder(labeledBData, bRealLabels, self.numSpeices) #bData
+				bReconstData = autoencoder(labeledBData, bRealLabels, self.__numSpeices) #bData
 
 				#added
 				#split input data and reconstructed data by batch and batch-specific genes
@@ -337,14 +342,14 @@ class scVitalModel(object):
 				bDiscPred = discriminator(bLatent)
 
 				#bDiscWrongLoss = discriminatorLossFunc(bDiscPred, bRealLabels)
-				bRealLabOneHot = F.one_hot(bRealLabels, num_classes=self.numSpeices).float()
-				reconLatentEven = torch.ones_like(bRealLabOneHot)*(1/self.numSpeices)
+				bRealLabOneHot = F.one_hot(bRealLabels, num_classes=self.__numSpeices).float()
+				reconLatentEven = torch.ones_like(bRealLabOneHot)*(1/self.__numSpeices)
 				bDiscTrickLoss = discriminatorLossFunc(bDiscPred, reconLatentEven) #bRealLabels)
 				
 				#KL Div loss with N(0,1)
 				klDivLoss = encoder.klDivLoss
 
-				bRecTrickDiscLoss = self.reconCoef*bReconstLoss + klDivCoeff[iEp]*klDivLoss + self.discCoef*bDiscTrickLoss 
+				bRecTrickDiscLoss = self.__reconCoef*bReconstLoss + klDivCoeff[iEp]*klDivLoss + self.__discCoef*bDiscTrickLoss 
 				bRecTrickDiscLoss.backward()
 				
 				#optimize generator
@@ -352,12 +357,12 @@ class scVitalModel(object):
 				aeSchedLR.step(iEp + iBatch / numMiniBatch)
 
 				discTrainLoss[iBatch] 		= bDiscRealLoss.item()
-				reconstTrainLoss[iBatch] 	= self.reconCoef*bReconstLoss.item()
-				trickTrainLoss[iBatch]		= self.discCoef*bDiscTrickLoss.item()
+				reconstTrainLoss[iBatch] 	= self.__reconCoef*bReconstLoss.item()
+				trickTrainLoss[iBatch]		= self.__discCoef*bDiscTrickLoss.item()
 				klDivTrainLoss[iBatch]		= klDivCoeff[iEp]*klDivLoss.item()
 				aeTotalTrainLoss[iBatch] 	= bRecTrickDiscLoss.item()
 
-				if (self.verbose and (iEp % 50 == 0 and iBatch % 20 == 0)):
+				if (self.__verbose and (iEp % 50 == 0 and iBatch % 20 == 0)):
 					print(f"Epoch={iEp}, batch={iBatch}, discr={np.nanmean(discTrainLoss):.4f}, total={np.nanmean(aeTotalTrainLoss):.4f}, recon={np.nanmean(reconstTrainLoss):.4f}, trick={np.nanmean(trickTrainLoss):.4f}, klDiv={np.nanmean(klDivTrainLoss):.4f}")
 
 			discEpochLoss[iEp] 		= np.nanmean(discTrainLoss)
@@ -372,7 +377,7 @@ class scVitalModel(object):
 			#Early Stopping
 			totalLoss = np.mean(aeTotalEpochLoss[max(iEp-5,0):(iEp+1)])
 			deltaLoss = np.abs(prevTotalLoss-totalLoss)
-			if (deltaLoss < self.earlyStop and iEp > 10):
+			if (deltaLoss < self.__earlyStop and iEp > 10):
 				print(f' epoch:{iEp} delta:{deltaLoss}')
 				break
 			prevTotalLoss = totalLoss
@@ -464,10 +469,10 @@ class scVitalModel(object):
 		tuple: A tuple containing the input data, labels, and batch-specific gene indices.
 		"""
 		# Convert AnnData object matrix to dense tensor
-		inData = self._getAdataX(self.adata)
+		inData = self._getAdataX(self.__adata)
 
 		# Extract batch labels and create a dictionary mapping unique batches to indices
-		batch = np.array(self.adata.obs[self.batchLabel])
+		batch = np.array(self.__adata.obs[self.__batchLabel])
 		uniqueBatch = np.unique(batch)
 		numBatch = len(uniqueBatch)
 		batchDict = dict(zip(uniqueBatch,range(0,numBatch)))
@@ -478,17 +483,17 @@ class scVitalModel(object):
 		inLabels = inLabels.view(len(inLabels), 1)
 
 		# Initialize gene type array and batch-species dictionary
-		geneType = np.full(len(self.adata.var_names), "all", dtype=object)
+		geneType = np.full(len(self.__adata.var_names), "all", dtype=object)
 		batchSpeciesDict = {batch: "all" for batch in uniqueBatch}
 
 		# Check if species label exists in the AnnData object
-		if np.isin([speciesLabel], self.adata.obs.columns.values)[0]:
-			uniqueSpecies = self.adata.obs[speciesLabel].cat.categories
-			batchSpecies = np.unique(["!".join(x) for x in self.adata.obs[[self.batchLabel, speciesLabel]].values])
+		if np.isin([speciesLabel], self.__adata.obs.columns.values)[0]:
+			uniqueSpecies = self.__adata.obs[speciesLabel].cat.categories
+			batchSpecies = np.unique(["!".join(x) for x in self.__adata.obs[[self.__batchLabel, speciesLabel]].values])
 			batchSpeciesDict = {indBatchSpecies.split("!")[0]: indBatchSpecies.split("!")[1] for indBatchSpecies in batchSpecies}
 			
 			# Assign gene types based on species
-			for i, gene in enumerate(self.adata.var_names):
+			for i, gene in enumerate(self.__adata.var_names):
 				gsplit = gene.split("/")
 				if ' ' in gsplit:
 					for j, g in enumerate(gsplit):
@@ -508,57 +513,76 @@ class scVitalModel(object):
 
 	def saveDiscrim(self, outDiscFile):
 		"""Save the discriminator to file."""
-		torch.save(self.discriminator, outDiscFile)
+		torch.save(self.__discriminator, outDiscFile)
 
 	def saveAutoenc(self, outVAEFile):
 		"""Save the autoencoder to file."""
-		torch.save(self.autoencoderOut, outVAEFile)
+		torch.save(self.__autoencoderOut, outVAEFile)
 
 	# Getters for the instance variables
-	def get_adata(self):
+	def getAdata(self):
 		"""Return the annotated data matrix."""
-		return self.adata
+		return self.__adata
 
-	def get_batchLabel(self):
+	def getBatchLabel(self):
 		"""Return the batch label."""
-		return self.batchLabel
+		return self.__batchLabel
 
-	def get_miniBatchSize(self):
+	def getMiniBatchSize(self):
 		"""Return the mini-batch size."""
-		return self.miniBatchSize
+		return self.__miniBatchSize
 
-	def get_numEpoch(self):
+	def getNumEpoch(self):
 		"""Return the number of epochs."""
-		return self.numEpoch
+		return self.__numEpoch
 
-	def get_learningRate(self):
+	def getLearningRate(self):
 		"""Return the learning rate."""
-		return self.learningRate
+		return self.__learningRate
 
-	def get_latent(self):
+	def getLayerDims(self):
+		"""Return a list of the dimentions of the hidden layers of scVital."""
+		return [len(self.__adata.var_names), self.__hid1, self.__hid2, self.__latentSize] 
+
+	def getDiscDims(self):
+		"""Return a list of the dimentions of the hidden layers of discriminator scVital."""
+		return [self.__latentSize, self.__discHid, self.__numSpeices] 
+
+	def getLatentSize(self):
 		"""Return the size of the latent space."""
-		return self.latentSize
+		return self.__latentSize
 
-	def get_reconCoef(self):
+	def getReconCoef(self):
 		"""Return the coefficient for reconstruction loss."""
-		return self.reconCoef
+		return self.__reconCoef
 
-	def get_klCoef(self):
+	def getKlCoef(self):
 		"""Return the coefficient for KL divergence loss."""
-		return self.klCoef
+		return self.__klCoef
 
-	def get_discCoef(self):
+	def getDiscCoef(self):
 		"""Return the coefficient for discriminator loss."""
-		return self.discCoef
+		return self.__discCoef
 
-	def get_discIter(self):
+	def getDiscIter(self):
 		"""Return the number of iterations for discriminator training."""
-		return self.discIter
+		return self.__discIter
 
-	def get_earlyStop(self):
+	def getEarlyStop(self):
 		"""Return the delta error to trigger early stopping."""
-		return self.earlyStop
+		return self.__earlyStop
 
+	def getAutoencoder(self):
+		"""Return the Autoencoder."""
+		return self.__autoencoder
+
+	def getDisriminator(self):
+		"""Return the Discriminator."""
+		return self.__discriminator
+
+	def getLossDict(self):
+		"""Return the loss dicitonary of training."""
+		return self.__lossDict
 
 
 
