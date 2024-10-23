@@ -27,51 +27,75 @@ from scipy.sparse import csr_matrix
 from collections import defaultdict
 
 def calcPairsLSS(adata, latent, batchName, cellTypeLabel):
-	adata = checkPairsAddSimple(adata, batchName, cellTypeLabel)
-	allCellTypes, ctPairs = getUniCtPairs(adata, batchName, cellTypeLabel)
-	clustDist, lssAUC, totalDist = calcLSS(adata, latent, cellTypeLabel, batchName, allCellTypes, ctPairs)
-	return clustDist, lssAUC, totalDist, allCellTypes, ctPairs
+    # Check and add simple pairs to the data
+    adata = checkPairsAddSimple(adata, batchName, cellTypeLabel)
+    # Get unique cell types and their pairs
+    allCellTypes, ctPairs = getUniCtPairs(adata, batchName, cellTypeLabel)
+    # Calculate LSS metrics
+    clustDist, lssAUC, totalDist = calcLSS(adata, latent, cellTypeLabel, batchName, allCellTypes, ctPairs)
+    # Return calculated metrics and cell type information
+    return clustDist, lssAUC, totalDist, allCellTypes, ctPairs
 
 def calcLSS(adata, latent, cellTypeLabel, batchName, allCellTypes, ctPairs):
-	clustDist = calcClustDist(adata, latent, allCellTypes, batchName, cellTypeLabel)
-	realPairs = __pairToIndex(np.array(allCellTypes), np.array(allCellTypes), np.array(ctPairs))
-	totalDist = calcTotalDist(clustDist, realPairs)
-	lssAUC = calcAUC(clustDist, realPairs)
-	return(clustDist, lssAUC, totalDist)
+    # Calculate cluster distances
+    clustDist = calcClustDist(adata, latent, allCellTypes, batchName, cellTypeLabel)
+    # Convert cell type pairs to indices
+    realPairs = __pairToIndex(np.array(allCellTypes), np.array(allCellTypes), np.array(ctPairs))
+    # Calculate total distance
+    totalDist = calcTotalDist(clustDist, realPairs)
+    # Calculate AUC for LSS
+    lssAUC = calcAUC(clustDist, realPairs)
+    # Return calculated distances and AUC
+    return clustDist, lssAUC, totalDist
+
 
 def calcAUC(clustDist, realPairs): 
-	simpDist = np.triu(-1*clustDist.values)+np.tril(np.full(clustDist.shape[0], fill_value=-2))
-	labelTrue = np.zeros(clustDist.shape)
-	for (i, j) in np.array(realPairs):
-		labelTrue[i,j] = 1
-	labelPred = simpDist.flatten()
-	labelTrue = np.triu(labelTrue).flatten()
-	return(roc_auc_score(labelTrue, labelPred))
+    # Simplify distance matrix for AUC calculation
+    simpDist = np.triu(-1 * clustDist.values) + np.tril(np.full(clustDist.shape[0], fill_value=-2))
+    # Initialize true labels matrix
+    labelTrue = np.zeros(clustDist.shape)
+    # Mark true pairs in the label matrix
+    for (i, j) in np.array(realPairs):
+        labelTrue[i, j] = 1
+    # Flatten the matrices for AUC calculation
+    labelPred = simpDist.flatten()
+    labelTrue = np.triu(labelTrue).flatten()
+    # Calculate and return AUC score
+    return roc_auc_score(labelTrue, labelPred)
 
 def calcClustDist(adata, latent, allCellTypes, batchName, cellTypeLabel):
-	clustDist = pd.DataFrame(np.zeros((len(allCellTypes),len(allCellTypes))), columns=allCellTypes, index=allCellTypes)
-	for hcs in clustDist.index:
-		hs, hc = hcs.split("~")
-		hMean = np.mean(adata[np.logical_and(adata.obs[cellTypeLabel]==hc,adata.obs[batchName]==hs)].obsm[latent], axis=0)
-		for mcs in clustDist.columns:
-			ms, mc = mcs.split("~")
-			if(hcs == mcs):
-				clustDist.loc[hcs,mcs] = 0
-			else:
-				mMean = np.mean(adata[np.logical_and(adata.obs[cellTypeLabel]==mc,adata.obs[batchName]==ms)].obsm[latent], axis=0)
-				clustDist.loc[hcs,mcs] = np.round(distance.cosine(hMean,mMean),decimals=4)
-				#clustDist.loc[hcs,mcs] = np.round(mean_squared_error(hMean,mMean),decimals=4)
-				#r, _ = scipy.stats.pearsonr(hMean,mMean)
-				#clustDist.loc[hcs,mcs] = np.abs(np.round(r,decimals=4)-1)
-	return(clustDist)
+    # Initialize cluster distance matrix
+    clustDist = pd.DataFrame(np.zeros((len(allCellTypes), len(allCellTypes))), columns=allCellTypes, index=allCellTypes)
+    # Calculate mean latent space values for each cell type and batch
+    for hcs in clustDist.index:
+        hs, hc = hcs.split("~")
+        hMean = np.mean(adata[np.logical_and(adata.obs[cellTypeLabel] == hc, adata.obs[batchName] == hs)].obsm[latent], axis=0)
+        for mcs in clustDist.columns:
+            ms, mc = mcs.split("~")
+            if hcs == mcs:
+                clustDist.loc[hcs, mcs] = 0
+            else:
+                mMean = np.mean(adata[np.logical_and(adata.obs[cellTypeLabel] == mc, adata.obs[batchName] == ms)].obsm[latent], axis=0)
+                # Calculate cosine distance between means
+                clustDist.loc[hcs, mcs] = np.round(distance.cosine(hMean, mMean), decimals=4)
+                # Alternative distance metrics (commented out)
+                # clustDist.loc[hcs, mcs] = np.round(mean_squared_error(hMean, mMean), decimals=4)
+                # r, _ = scipy.stats.pearsonr(hMean, mMean)
+                # clustDist.loc[hcs, mcs] = np.abs(np.round(r, decimals=4) - 1)
+    # Return the cluster distance matrix
+    return clustDist
 
 
 def calcTotalDist(clustDist, realPairs): 
-	totalDist = 0
-	for (i, j) in np.array(realPairs):
-		totalDist += clustDist.iloc[i,j]
-	totalDist *= 0.5
-	return totalDist
+    # Initialize total distance
+    totalDist = 0
+    # Sum distances for all real pairs
+    for (i, j) in np.array(realPairs):
+        totalDist += clustDist.iloc[i, j]
+    # Adjust total distance
+    totalDist *= 0.5
+    # Return total distance
+    return totalDist
 
 
 def checkPairsAddSimple(adata, batchName, labelName):
