@@ -40,3 +40,8 @@ dependencies = [
     "scanpy",
     "torch"
 ]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "src",
+]

@@ -1,3 +1,3 @@
-from .scVital import runScVital, scVitalModel, runTrainScVital
+from .scVital import makeScVital, scVitalModel
 
-__all__ = ['runScVital', 'scVitalModel', 'runTrainScVital']
+__all__ = ['makeScVital', 'scVitalModel']

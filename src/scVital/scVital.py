@@ -8,6 +8,8 @@ import pandas as pd
 import numpy as np
 import scanpy as sc
 import anndata as an
+from scipy.sparse import isspmatrix
+
 
 import torch
 from torch import nn
@@ -15,8 +17,8 @@ from torch.utils.data import DataLoader
 from torch import optim
 import torch.nn.functional as F
 
-import AutoEncoder as ae
-import Discriminator as dis 
+import scVital.AutoEncoder as ae
+import scVital.Discriminator as dis 
 
 
 def makeScVital(
@@ -29,15 +31,15 @@ def makeScVital(
 	hid2: int = 128,
 	latentSize: int = 12,
 	discHid: int = 6,
-	reconCoef: float = 1,
+	reconCoef: float = 1e1,
 	klCoef: float = 1e-1,
-	discCoef: float = 1,
+	discCoef: float = 1e0,
 	discIter: int = 5,
 	earlyStop: float = 1e-2,
 	train: bool=False,
 	seed: int = 18,
 	verbose: bool = True
-) -> scVital:
+) -> 'scVitalModel':
 	"""
 	Run the scVital model with the specified parameters.
 
@@ -110,7 +112,7 @@ def makeScVital(
 		warnings.warn("The adata object has many genes consider subsetting on highly variable genes", UserWarning)
 
 	# Initialize the scVital model with the provided parameters
-	scVitalData = scVital(
+	scVitalData = scVitalModel(
 		adata, batchLabel, miniBatchSize, numEpoch, learningRate,
 		hid1, hid2, latentSize, discHid, reconCoef, klCoef, discCoef,
 		discIter, earlyStop, seed, verbose
@@ -410,7 +412,7 @@ class scVitalModel(object):
 		
 		return LabeledData, layer1Dim, numSpeices
 
-	def _klCycle(start, stop, n_epoch, n_cycle=4):
+	def _klCycle(_, start, stop, n_epoch, n_cycle=4):
 		"""
 		Generate a KL divergence schedule that cycles between start and stop values over the specified number of epochs.
 
@@ -436,7 +438,7 @@ class scVitalModel(object):
 				i += 1
 		return kl
 
-	def _getAdataX(adata):
+	def _getAdataX(self, adata):
 		"""
 		Convert the AnnData object matrix to a dense tensor.
 
@@ -462,7 +464,7 @@ class scVitalModel(object):
 		tuple: A tuple containing the input data, labels, and batch-specific gene indices.
 		"""
 		# Convert AnnData object matrix to dense tensor
-		inData = _getAdataX(self.adata)
+		inData = self._getAdataX(self.adata)
 
 		# Extract batch labels and create a dictionary mapping unique batches to indices
 		batch = np.array(self.adata.obs[self.batchLabel])
@@ -509,52 +511,52 @@ class scVitalModel(object):
 		torch.save(self.discriminator, outDiscFile)
 
 	def saveAutoenc(self, outVAEFile):
-	"""Save the autoencoder to file."""
+		"""Save the autoencoder to file."""
 		torch.save(self.autoencoderOut, outVAEFile)
 
 	# Getters for the instance variables
 	def get_adata(self):
-	"""Return the annotated data matrix."""
+		"""Return the annotated data matrix."""
 		return self.adata
 
 	def get_batchLabel(self):
-	"""Return the batch label."""
+		"""Return the batch label."""
 		return self.batchLabel
 
 	def get_miniBatchSize(self):
-	"""Return the mini-batch size."""
+		"""Return the mini-batch size."""
 		return self.miniBatchSize
 
 	def get_numEpoch(self):
-	"""Return the number of epochs."""
+		"""Return the number of epochs."""
 		return self.numEpoch
 
 	def get_learningRate(self):
-	"""Return the learning rate."""
+		"""Return the learning rate."""
 		return self.learningRate
 
 	def get_latent(self):
-	"""Return the size of the latent space."""
+		"""Return the size of the latent space."""
 		return self.latentSize
 
 	def get_reconCoef(self):
-	"""Return the coefficient for reconstruction loss."""
+		"""Return the coefficient for reconstruction loss."""
 		return self.reconCoef
 
 	def get_klCoef(self):
-	"""Return the coefficient for KL divergence loss."""
+		"""Return the coefficient for KL divergence loss."""
 		return self.klCoef
 
 	def get_discCoef(self):
-	"""Return the coefficient for discriminator loss."""
+		"""Return the coefficient for discriminator loss."""
 		return self.discCoef
 
 	def get_discIter(self):
-	"""Return the number of iterations for discriminator training."""
+		"""Return the number of iterations for discriminator training."""
 		return self.discIter
 
 	def get_earlyStop(self):
-	"""Return the delta error to trigger early stopping."""
+		"""Return the delta error to trigger early stopping."""
 		return self.earlyStop
 
 
