@@ -180,7 +180,7 @@ class scVitalModel(object):
 		self.__batchSpecLabIndex = batchSpecLabIndex
 
 		# Prepare data by appending labels
-		LabeledData, layer1Dim, numSpeices = self._getLabeledData(inData, inLabels)
+		LabeledData, layer1Dim, numSpeices = self._getLabeledData(inData)
 		self.__LabeledData = LabeledData
 		self.__numSpeices = numSpeices
 
@@ -230,20 +230,17 @@ class scVitalModel(object):
 		discriminatorLossFunc = torch.nn.CrossEntropyLoss()
 
 		# Train the model
-		autoencoderOut, discriminatorOut, lossDict = self._trainScVital(
-			self.__autoencoder, autoencoderOpt, reconstructionLossFunc, aeSchedLR,
-			self.__discriminator, discriminatorOpt, discriminatorLossFunc, discSchedLR
-		)
+		lossDict = self._trainScVital(autoencoderOpt, reconstructionLossFunc, aeSchedLR, discriminatorOpt, discriminatorLossFunc, discSchedLR)
 
-		self.__autoencoder = autoencoderOut
-		self.__discriminator = discriminatorOut
+		#self.__autoencoder = autoencoderOut
+		#self.__discriminator = discriminatorOut
 		self.__lossDict = lossDict
 
 		# Set models to evaluation mode
-		autoencoderOut.eval()
-		encoderOut = autoencoderOut.getEncoder()
+		self.__autoencoder.eval()
+		encoderOut = self.__autoencoder.getEncoder()
 		encoderOut.eval()
-		discriminatorOut.eval()
+		self.__discriminator.eval()
 
 		# Prepare one-hot encoded labels
 		LabOneHot = torch.reshape(F.one_hot(self.__inLabels.to(torch.int64), num_classes=self.__numSpeices).float(), (self.__LabeledData.shape[0], self.__numSpeices))#inData.shape[0]
@@ -252,17 +249,17 @@ class scVitalModel(object):
 		# Get latent representations and reconstructed data
 		allEncOut = encoderOut(labOneHotInData)
 		bLatent = allEncOut.detach().numpy()
-		reconData = autoencoderOut(labOneHotInData, self.__inLabels, self.__numSpeices).detach().numpy()
+		reconData = self.__autoencoder(labOneHotInData, self.__inLabels, self.__numSpeices).detach().numpy()
 
 		# Store results in AnnData object
 		self.__adata.obsm["X_scVital"] = bLatent
 		self.__adata.layers["scVitalRecon"] = reconData
 
 
-	def _trainScVital(self, autoencoder, autoencoderOpt, reconstructionLossFunc, aeSchedLR,
-					 discriminator, discriminatorOpt, discriminatorLossFunc, discSchedLR):
-		autoencoder.train()
-		discriminator.train()
+	def _trainScVital(self, autoencoderOpt, reconstructionLossFunc, aeSchedLR,
+					 discriminatorOpt, discriminatorLossFunc, discSchedLR):
+		self.__autoencoder.train()
+		self.__discriminator.train()
 
 		ldTrainDataLoader = DataLoader(self.__LabeledData, batch_size=self.__miniBatchSize, shuffle=True)
 		numMiniBatch = len(ldTrainDataLoader)
@@ -296,7 +293,7 @@ class scVitalModel(object):
 				
 				#Train discriminator
 				#get mouse and human data in latent space
-				encoder = autoencoder.getEncoder()
+				encoder = self.__autoencoder.getEncoder()
 				#pdb.set_trace()
 				for i in range(self.__discIter):
 					bLatent = encoder(labeledBData) #bData
@@ -304,7 +301,7 @@ class scVitalModel(object):
 					#Optimize discriminator
 					discriminatorOpt.zero_grad()
 
-					bDiscPred = discriminator(bLatent)
+					bDiscPred = self.__discriminator(bLatent)
 					bDiscRealLoss = discriminatorLossFunc(bDiscPred, bRealLabels)
 					bDiscRealLoss.backward()
 
@@ -315,13 +312,13 @@ class scVitalModel(object):
 				autoencoderOpt.zero_grad()
 				
 				#encode mouse and human data in latent space
-				bReconstData = autoencoder(labeledBData, bRealLabels, self.__numSpeices) #bData
+				bReconstData = self.__autoencoder(labeledBData, bRealLabels, self.__numSpeices) #bData
 
 				#added
 				#split input data and reconstructed data by batch and batch-specific genes
 				#calculate reconstruction on on relavent data
 				bReconstLoss = torch.tensor(0.0)
-				batchSpecLabIndex = autoencoder.getGeneIndex()
+				batchSpecLabIndex = self.__autoencoder.getGeneIndex()
 				allCells, allGenes = bData.shape
 
 				for i in labels: # for every batch
@@ -337,11 +334,11 @@ class scVitalModel(object):
 				
 				#bReconstLoss = reconstructionLossFunc(bReconstData, bData) 
 				
-				encoder = autoencoder.getEncoder()
+				encoder = self.__autoencoder.getEncoder()
 				bLatent = encoder(labeledBData) #bData
 
 				#train discriminator and get preds try and subtract from total Loss
-				bDiscPred = discriminator(bLatent)
+				bDiscPred = self.__discriminator(bLatent)
 
 				#bDiscWrongLoss = discriminatorLossFunc(bDiscPred, bRealLabels)
 				bRealLabOneHot = F.one_hot(bRealLabels, num_classes=self.__numSpeices).float()
@@ -393,10 +390,10 @@ class scVitalModel(object):
 					"klDiv":klDivEpochLoss,
 					"discr":discEpochLoss}
 
-		return(autoencoder, discriminator, lossDict)
+		return(lossDict)
 
 
-	def _getLabeledData(self, inData, inLabels):
+	def _getLabeledData(self, inData):
 		"""
 		Concatenate labels and data along the specified axis and return the labeled data,
 		the dimension of the first layer, and the number of unique species.
@@ -409,17 +406,18 @@ class scVitalModel(object):
 		tuple: A tuple containing the labeled data, the dimension of the first layer, and the number of unique species.
 		"""
 		# Concatenate labels and data along the columns
-		LabeledData = torch.cat((inLabels, inData), axis=1)
+		LabeledData = torch.cat((self.__inLabels, inData), axis=1)
 		
 		# Get the dimension of the first layer (number of features in the input data)
 		layer1Dim = inData.size()[1]
 		
 		# Get the number of unique species from the labels
-		numSpeices = len(inLabels.unique())
+		numSpeices = len(self.__inLabels.unique())
 		
 		return LabeledData, layer1Dim, numSpeices
 
-	def _klCycle(_, start, stop, n_epoch, n_cycle=4):
+	@staticmethod
+	def _klCycle(start, stop, n_epoch, n_cycle=4):
 		"""
 		Generate a KL divergence schedule that cycles between start and stop values over the specified number of epochs.
 
@@ -445,7 +443,7 @@ class scVitalModel(object):
 				i += 1
 		return kl
 
-	def _getAdataX(self, adata):
+	def _getAdataX(self):
 		"""
 		Convert the AnnData object matrix to a dense tensor.
 
@@ -455,7 +453,7 @@ class scVitalModel(object):
 		Returns:
 		torch.Tensor: Dense tensor representation of the data matrix.
 		"""
-		adataX = adata.X
+		adataX = self.__adata.X
 		if isspmatrix(adataX):
 			adataX = adataX.todense()
 		return torch.tensor(adataX)
@@ -471,7 +469,7 @@ class scVitalModel(object):
 		tuple: A tuple containing the input data, labels, and batch-specific gene indices.
 		"""
 		# Convert AnnData object matrix to dense tensor
-		inData = self._getAdataX(self.__adata)
+		inData = self._getAdataX()
 
 		# Extract batch labels and create a dictionary mapping unique batches to indices
 		batch = np.array(self.__adata.obs[self.__batchLabel])

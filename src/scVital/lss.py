@@ -237,8 +237,8 @@ def plotHeatLSS(adata, latent, allCellTypes, ctPairs, save=False, plot=False):
 	if(save): #save
 		cdMap.savefig(f"{save}/Clmap_{latent}.svg")
 
-def plotGraphLSS(adata, cellTypeLabel, clustDist, name="", colors=plt.get_cmap('tab10').colors, shapes="ospx^><.....", prog="neato", wLab=False, qCut = 0.28, plot=False, save=False):
-	batchDict, annoToColorDict = getBatchCellDicts(adata, cellTypeLabel, colors, shapes)
+def plotGraphLSS(adata, cellTypeLabel, clustDist, name="", ctColors=plt.get_cmap('tab10').colors, btColors=None, shapes="ospx^><.....", prog="neato", wLab=False, qCut = 0.28, plot=False, save=False):
+	batchDict, annoToColorDict = __getBatchCellDicts(adata, cellTypeLabel, ctColors, btColors. shapes)
 	overlap = np.unique(adata.obs[cellTypeLabel])
 	pairs = adata.uns["pairs"]
 	batchToColorDict = {lab:batchDict[lab][1] for lab in batchDict.keys()}
@@ -344,7 +344,7 @@ def __getOverColors(ogLabel, overlabel, pairs, colorDict):
 		colorOut[i] = colorDict[ctf]
 	return colorOut
 
-def getBatchCellDicts(adata, cellTypeLabel, colors=plt.get_cmap('tab10').colors, shapes="ospx^><....."):
+def __getBatchCellDicts(adata, cellTypeLabel, ctColors=plt.get_cmap('tab10').colors, btColors=None, shapes="ospx^><....."):
 	if len(shapes) < len(adata.obs[batchName].cat.categories):
 		shapes = shapes + "."*len(adata.obs[batchName].cat.categories)
 
@@ -353,9 +353,9 @@ def getBatchCellDicts(adata, cellTypeLabel, colors=plt.get_cmap('tab10').colors,
 
 	pairs = adata.uns["pairs"]
 	cellTypeDict = dict(zip(adata.obs[cellTypeLabel].cat.categories, list(zip(adata.obs[cellTypeLabel].cat.categories, 
-																			  colors[:len(adata.obs[cellTypeLabel].cat.categories)]))))
+																			  ctColors[:len(adata.obs[cellTypeLabel].cat.categories)]))))
 	overlapDict = dict(zip(adata.obs["overlapLabel"].cat.categories, list(zip(adata.obs["overlapLabel"].cat.categories, 
-																			  colors[:len(adata.obs["overlapLabel"].cat.categories)]))))
+																			  ctColors[:len(adata.obs["overlapLabel"].cat.categories)]))))
 	gpairs = __group_pairs(pairs)
 	for gpair in gpairs:
 		for csc in gpair:
@@ -366,6 +366,21 @@ def getBatchCellDicts(adata, cellTypeLabel, colors=plt.get_cmap('tab10').colors,
 			cellTypeDict[csc] = (csc, overColor)
 	
 	annoToColorDict = {lab:cellTypeDict[lab][1] for lab in cellTypeDict.keys()}
+	if(btColors is None):
+		numBatch=len(adata.obs[batchName].cat.categories)
+		btColors = [(i * 0.9/(numBatch-1),i * 0.9/(numBatch-1),i * 0.9/(numBatch-1)) for i in range(numBatch)]
 	batchDict = dict(zip(adata.obs[batchName].cat.categories, 
-						 list(zip(adata.obs[batchName].cat.categories,colors[:len(adata.obs[batchName].cat.categories)],shapes[:len(adata.obs[batchName].cat.categories)]))))
+						 list(zip(adata.obs[batchName].cat.categories,btColors[:len(adata.obs[batchName].cat.categories)],shapes[:len(adata.obs[batchName].cat.categories)]))))
 	return(batchDict, annoToColorDict)
+
+
+
+
+
+
+
+
+
+
+
+	
