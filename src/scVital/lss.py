@@ -13,16 +13,11 @@ import matplotlib.patches as patches
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
 
-from sklearn import metrics
-from sklearn.neighbors import NearestNeighbors, KNeighborsRegressor
-from sklearn.metrics import RocCurveDisplay, roc_curve, roc_auc_score
+from sklearn.metrics import roc_curve, roc_auc_score
 from scipy.spatial.distance import squareform
 from scipy.cluster.hierarchy import linkage
 from scipy.cluster import hierarchy 
-from scipy.stats import power_divergence
-from scipy.sparse import isspmatrix
 from scipy.spatial import distance
-from scipy.sparse import csr_matrix
 
 from collections import defaultdict
 
@@ -383,4 +378,3 @@ def __getBatchCellDicts(adata, cellTypeLabel, ctColors=plt.get_cmap('tab10').col
 
 
 
-	

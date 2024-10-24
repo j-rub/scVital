@@ -361,7 +361,7 @@ class scVitalModel(object):
 				klDivTrainLoss[iBatch]		= klDivCoeff[iEp]*klDivLoss.item()
 				aeTotalTrainLoss[iBatch] 	= bRecTrickDiscLoss.item()
 
-				if (self.__verbose and (iEp % 50 == 0 and iBatch % 20 == 0)):
+				if (self.__verbose and (iEp % 10 == 0 and iBatch % 8 == 0)):
 					print(f"Epoch={iEp}, batch={iBatch}, discr={np.nanmean(discTrainLoss):.4f}, total={np.nanmean(aeTotalTrainLoss):.4f}, recon={np.nanmean(reconstTrainLoss):.4f}, trick={np.nanmean(trickTrainLoss):.4f}, klDiv={np.nanmean(klDivTrainLoss):.4f}")
 
 			discEpochLoss[iEp] 		= np.nanmean(discTrainLoss)
