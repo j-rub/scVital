@@ -323,7 +323,7 @@ class scVitalModel(object):
 
 				for i in labels: # for every batch
 					sCells = (bRealLabels==i).reshape((allCells,1))	   #Cells realting to label
-                    #sGenes = torch.tensor(bool(batchSpecLabIndex[i])).reshape((1, allGenes))
+					#sGenes = torch.tensor(bool(batchSpecLabIndex[i])).reshape((1, allGenes))
 
 					sGenes = torch.tensor(batchSpecLabIndex[i]).reshape((1,allGenes))	 #Genes relating to label
 					numCells, numGenes = torch.sum(sCells), torch.sum(sGenes,axis=1)	  #number of cells and genes in of the label
@@ -495,6 +495,12 @@ class scVitalModel(object):
 			# Assign gene types based on species
 			for i, gene in enumerate(self.__adata.var_names):
 				gsplit = gene.split("/")
+				if len(gsplit) < 2:
+					gInd = np.where(adata.var_names.values == gsplit)[0][0]
+					try:
+						geneType[i] = adata[inData[:,gInd].flatten()>0,:].obs[speciesLabel].unique()[0]
+					except:
+						geneType[i] = "none"
 				if ' ' in gsplit:
 					for j, g in enumerate(gsplit):
 						if g != " ":
