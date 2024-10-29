@@ -1,4 +1,4 @@
-#make vizualizations for scVital
+#NOT IMPEMENTED
 
 import os
 import time
@@ -111,36 +111,6 @@ def vizMetricsDF(metricDf, metricFile):
 	fig.savefig(".".join([metricFile.split(".csv")[0],"png"]))
 	plt.close(fig)
 
-def vizFullViz(outClustStatDir, height=24, width=24, save=True):
-	vizs=["normal","scVital","BBKNN","Harmony"]
-	fig, axs = plt.subplots(len(vizs), 3, gridspec_kw={'width_ratios': [3, 1, 1]})
-	for i, viz in enumerate(vizs):
-		#if(viz=="ae"):
-		#	axs[i,0].imshow(img.imread(f"{outClustStatDir}LossPlots.png"))
-		#axs[i,1].imshow(img.imread(f"{outClustStatDir}latentHeatmap_{viz}.png"))
-		axs[i,0].imshow(img.imread(f"{outClustStatDir}umap_{viz}_{viz}.svg"))
-		vizStats(f"{outClustStatDir}stats_{viz}.csv")
-		axs[i,1].imshow(img.imread(f"{outClustStatDir}stats_{viz}.png"))
-		vizMetrics(f"{outClustStatDir}metrics_{viz}.csv")
-		axs[i,2].imshow(img.imread(f"{outClustStatDir}metrics_{viz}.png"))
-		#vizMetrics(f"{outClustStatDir}metrics_{viz}.csv")
-		#axs[i,2].imshow(img.imread(f"{outClustStatDir}metrics_{viz}.png"))
-
-	for x in range(len(axs)):
-		for y in range(len(axs[1])):
-			axs[x,y].xaxis.set_tick_params(labelbottom=False)
-			axs[x,y].yaxis.set_tick_params(labelleft=False)
-			axs[x,y].set_xticks([])
-			axs[x,y].set_yticks([])
-			axs[x,y].axis("off")
-
-	fig.set_figheight(height)
-	fig.set_figwidth(width)
-	#fig.tight_layout()
-	if(save):
-		fig.savefig(f"{outClustStatDir}CombinedPlots.png")
-		plt.close(fig)
-	return(fig)
 
 def plotMetricBarByData(df, label, outDir=None):
 	numDatas = df.shape[0]
@@ -237,16 +207,12 @@ def df2StackBar(clustBatch, neighborsKey, label, ax):
 	numClust = len(clusters)#len(adata.obs[neighborsKey].cat.categories)
 	rangeClusts = range(0,numClust)
 
-	#pdb.set_trace()
-
 	bott=np.zeros(numClust)
 	for bat in counts:
 		vals=counts[bat].values
 		name=counts[bat].name
 		ax.bar(rangeClusts, vals, bottom=bott, label=name)#, color=colorDict[name])
 		bott = bott+vals
-
-	#pdb.set_trace()
 
 	ax.set_title(f"# of Cells of each Cluster by {label}") 
 	#ax.set_xlabel("Cluster")#neighborsKey

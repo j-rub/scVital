@@ -70,7 +70,7 @@ def mergeAdatas(adatas, homology=None, species=None, names=None, label="dataset"
                 warnings.warn(f"Post-normalization range: {np.max(adata.X) - np.min(adata.X)}")
         geneSpecDict.append({"genes": np.array(adata.var_names.copy()), "species": species[i]})
 
-    getOverlapGenesMulti(homology, geneSpecDict)
+    geneSpecDict = getOverlapGenesMulti(homology, geneSpecDict)
     for i, genesDict in enumerate(geneSpecDict):
         adatas[i].var_names = genesDict["genes"]
 

@@ -1,4 +1,4 @@
-#benchmarking accuracy of scVital
+#NOT IMPEMENTED
 
 import os
 import time
@@ -206,9 +206,6 @@ def changeFileName(inFile, param, paramVal, pramSplit="_", valSplit = "~"):
 		together = valSplit.join(k)
 		newFileName = newFileName+pramSplit+together
 	return(newFileName[1:])
-
-
-		plt.close(fig)
 
 def heirSimi(adata, latent, cellLabel, allCellTypes, clustMet = "cosine"):
 	latLen = range(adata.obsm[latent].shape[1])
