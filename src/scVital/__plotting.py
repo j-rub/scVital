@@ -17,6 +17,33 @@ import matplotlib.patches as patches
 import textwrap
 
 
+def plotHVG():
+    minMean = 0.05
+    maxMean = 2.9
+    minDisp = 0.25
+
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+
+    means = adata.var[["means"]][adata.var[["means"]] > np.exp(-14)]#adata.var[["means"]],
+    axs[0].hist(np.log(means), bins=100)#, log=True),
+    axs[0].axvline(np.log(minMean), color='k', linestyle='dashed', linewidth=1)
+    axs[0].axvline(np.log(maxMean), color='k', linestyle='dashed', linewidth=1)
+    axs[0].set_title('Gene means counts')
+    axs[0].set_xlabel('means')
+    axs[0].set_ylabel('counts')
+
+    dispNorm = adata.var[["dispersions_norm"]][adata.var[["dispersions_norm"]] > np.exp(-8)]#adata.var[["means"]],
+    axs[1].hist(np.log(dispNorm), bins=100)#, log=True),
+    axs[1].axvline(np.log(minDisp), color='k', linestyle='dashed', linewidth=1)
+    axs[1].set_title('Gene dispersions counts')
+    axs[1].set_xlabel('dispersions')
+    axs[1].set_ylabel('counts')
+
+    sc.pp.highly_variable_genes(adata, min_disp=minDisp, min_mean=minMean, max_mean=maxMean, batch_key=batchKey)
+    print(sum(adata.var.highly_variable))
+    print(sum(adata.var.highly_variable_intersection))
+
+
 def vizStats(statFile):
 	stats = pd.read_csv(statFile,usecols=[1,2]).T
 	vizStatsDF(stats, statFile)

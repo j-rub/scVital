@@ -32,7 +32,7 @@ def mergeAdatas(adatas, homology=None, species=None, names=None, label="dataset"
         A concatenated AnnData object containing all input AnnData objects.
     """
     if species is None:
-        warnings.warn("No species given, assuming them")
+        warnings.warn("No species given, inferring them")
         species = []
         for adata in adatas:
             if "species" in adata.obs.columns:
@@ -47,7 +47,7 @@ def mergeAdatas(adatas, homology=None, species=None, names=None, label="dataset"
         warnings.warn(f"Species inferred: {species}")
 
     if homology is None:
-        warnings.warn("No homology given, assuming them")
+        warnings.warn("No homology given, inferring them")
         if species is None:
             raise ValueError("Species information is required to infer homology")
         species = [sp.lower() for sp in species]
@@ -61,13 +61,13 @@ def mergeAdatas(adatas, homology=None, species=None, names=None, label="dataset"
                 warnings.warn("Data not log normalized, calculating now")
                 sc.pp.normalize_total(adata, target_sum=1e4)
                 sc.pp.log1p(adata)
-                warnings.warn(f"Post-normalization range: {csr_matrix.max(adata.X) - csr_matrix.min(adata.X)}")
+                #warnings.warn(f"Post-normalization range: {csr_matrix.max(adata.X) - csr_matrix.min(adata.X)}")
         except:
             if np.max(adata.X) - np.min(adata.X) > 20:
                 warnings.warn("Data not log normalized, calculating now")
                 sc.pp.normalize_total(adata, target_sum=1e4)
                 sc.pp.log1p(adata)
-                warnings.warn(f"Post-normalization range: {np.max(adata.X) - np.min(adata.X)}")
+                #warnings.warn(f"Post-normalization range: {np.max(adata.X) - np.min(adata.X)}")
         geneSpecDict.append({"genes": np.array(adata.var_names.copy()), "species": species[i]})
 
     geneSpecDict = getOverlapGenesMulti(homology, geneSpecDict)
@@ -75,7 +75,7 @@ def mergeAdatas(adatas, homology=None, species=None, names=None, label="dataset"
         adatas[i].var_names = genesDict["genes"]
 
     if names is None:
-        warnings.warn("No names given, assuming them")
+        warnings.warn("No names given, inferring them")
         names = [f"adata{i}{specie}" for i, specie in enumerate(species)]
         warnings.warn(f"Names inferred: {names}")
 

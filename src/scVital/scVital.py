@@ -28,12 +28,12 @@ def makeScVital(
 	batchLabel: str,
 	miniBatchSize: int = 512,
 	numEpoch: int = 64,
-	learningRate: float = 3e-1,
+	learningRate: float = 1e-3,
 	hid1: int = 1024,
 	hid2: int = 128,
 	latentSize: int = 12,
 	discHid: int = 6,
-	reconCoef: float = 1e1,
+	reconCoef: float = 2e1,
 	klCoef: float = 1e-1,
 	discCoef: float = 1e0,
 	discIter: int = 5,
@@ -110,7 +110,7 @@ def makeScVital(
 		warnings.warn("The learning rate is unusually high and may cause instability.", UserWarning)
 	
 	# Issue a warning if the adata is very large
-	if adata.shape[0] > 4000:
+	if adata.shape[1] > 4000:
 		warnings.warn("The adata object has many genes consider subsetting on highly variable genes", UserWarning)
 
 	# Initialize the scVital model with the provided parameters
@@ -174,10 +174,7 @@ class scVitalModel(object):
 		torch.manual_seed(seed)
 
 		# Get training data and labels
-		inData, inLabels, batchSpecLabIndex = self._getTrainLabel(speciesLabel="species")
-
-		self.__inLabels = inLabels
-		self.__batchSpecLabIndex = batchSpecLabIndex
+		inData, batchSpecLabIndex = self._getTrainLabel(speciesLabel="species")
 
 		# Prepare data by appending labels
 		LabeledData, layer1Dim, numSpeices = self._getLabeledData(inData)
@@ -193,7 +190,7 @@ class scVitalModel(object):
 
 		# Initialize encoder and decoder
 		encoder = ae.Encoder(self.__layerDims, self.__numSpeices)
-		decoder = ae.Decoder(self.__layerDims, self.__numSpeices, geneIndexes=self.__batchSpecLabIndex)
+		decoder = ae.Decoder(self.__layerDims, self.__numSpeices, geneIndexes=batchSpecLabIndex)
 
 		# Initialize autoencoder
 		self.__autoencoder = ae.EncoderDecoder(encoder, decoder)
@@ -212,7 +209,6 @@ class scVitalModel(object):
 		Attributes:
 			self.__layerDims (list): Dimensions of the layers for the encoder and decoder.
 			self.__numSpeices (int): Number of species (classes) in the dataset.
-			self.__batchSpecLabIndex (list): Indexes for batch-specific labels.
 			self.__learningRate (float): Learning rate for the optimizers.
 			self.__inDiscriminatorDims (list): Dimensions of the layers for the discriminator.
 			self.__inLabels (torch.Tensor): Input labels for the data.
@@ -244,7 +240,7 @@ class scVitalModel(object):
 
 		# Prepare one-hot encoded labels
 		LabOneHot = torch.reshape(F.one_hot(self.__inLabels.to(torch.int64), num_classes=self.__numSpeices).float(), (self.__LabeledData.shape[0], self.__numSpeices))#inData.shape[0]
-		labOneHotInData = torch.cat((model.getLabeledData()[:,1:], LabOneHot), axis=1)
+		labOneHotInData = torch.cat((self.__LabeledData[:,1:], LabOneHot), axis=1)
 
 		# Get latent representations and reconstructed data
 		allEncOut = encoderOut(labOneHotInData)
@@ -466,7 +462,7 @@ class scVitalModel(object):
 		speciesLabel (str): Column name for species labels in the AnnData object.
 
 		Returns:
-		tuple: A tuple containing the input data, labels, and batch-specific gene indices.
+		tuple: A tuple containing the input data, and batch-specific gene indices.
 		"""
 		# Convert AnnData object matrix to dense tensor
 		inData = self._getAdataX()
@@ -480,7 +476,7 @@ class scVitalModel(object):
 
 		# Convert batch numbers to tensor and reshape
 		inLabels = torch.tensor(batchNum)
-		inLabels = inLabels.view(len(inLabels), 1)
+		self.__inLabels = inLabels.view(len(inLabels), 1)
 
 		# Initialize gene type array and batch-species dictionary
 		geneType = np.full(len(self.__adata.var_names), "all", dtype=object)
@@ -496,9 +492,9 @@ class scVitalModel(object):
 			for i, gene in enumerate(self.__adata.var_names):
 				gsplit = gene.split("/")
 				if len(gsplit) < 2:
-					gInd = np.where(adata.var_names.values == gsplit)[0][0]
+					gInd = np.where(self.__adata.var_names.values == gsplit)[0][0]
 					try:
-						geneType[i] = adata[inData[:,gInd].flatten()>0,:].obs[speciesLabel].unique()[0]
+						geneType[i] = self.__adata[(inData[:,gInd]>0).numpy(),:].obs[speciesLabel].unique()[0]
 					except:
 						geneType[i] = "none"
 				if ' ' in gsplit:
@@ -513,7 +509,7 @@ class scVitalModel(object):
 			speciesSpecGenes = np.logical_or(geneType == "all", geneType == batchSpeciesDict[batchLab])
 			batchSpecLabIndex.append(np.array(list(speciesSpecGenes), dtype=bool))
 
-		return inData, inLabels, batchSpecLabIndex
+		return inData, batchSpecLabIndex
 
 
 
@@ -592,6 +588,24 @@ class scVitalModel(object):
 	def getLossDict(self):
 		"""Return the loss dicitonary of training."""
 		return self.__lossDict
+
+	def __str__(self):
+		return (f"Model Parameters:\n"
+			f"adata: {self.__adata}\n"
+			f"batchLabel: {self.__batchLabel}\n"
+			f"miniBatchSize: {self.__miniBatchSize}\n"
+			f"numEpoch: {self.__numEpoch}\n"
+			f"learningRate: {self.__learningRate}\n"
+			f"reconCoef: {self.__reconCoef}\n"
+			f"klCoef: {self.__klCoef}\n"
+			f"discCoef: {self.__discCoef}\n"
+			f"discIter: {self.__discIter}\n"
+			f"earlyStop: {self.__earlyStop}\n"
+			f"seed: {self.__seed}\n"
+			f"verbose: {self.__verbose}\n"
+			f"numSpeices: {self.__numSpeices}\n"
+			f"layerDims: {self.__layerDims}\n"
+			f"inDiscriminatorDims: {self.__inDiscriminatorDims}")
 
 
 
