@@ -45,15 +45,30 @@ def mergeAdatas(adatas, homology=None, species=None, names=None, label="dataset"
                     species.append("mouse")
                     adata.obs["species"] = pd.Categorical(["mouse"] * len(adata.obs_names))
         warnings.warn(f"Species inferred: {species}")
+    allGenes = set()
+    for adata in adatas:
+        if "species" not in adata.obs.columns:
+            if sum([gene.upper() == gene for gene in adata.var_names.values]) > 0.8 * len(adata.var_names):
+                adata.obs["species"] = pd.Categorical(["human"] * len(adata.obs_names))
+            elif sum([gene[0].upper() + gene[1:].lower() == gene for gene in adata.var_names.values]) > 0.8 * len(adata.var_names):
+                adata.obs["species"] = pd.Categorical(["mouse"] * len(adata.obs_names))
+            else:
+                warnings.warn("Not mouse or human and not given")
+                adata.obs["species"] = pd.Categorical(["unk"] * len(adata.obs_names))
+        allGenes.update(list(adata.var_names.values))
 
-    if homology is None:
+    print(species)
+    if homology is None and len(set(species)) > 1:
         warnings.warn("No homology given, inferring them")
         if species is None:
             raise ValueError("Species information is required to infer homology")
         species = [sp.lower() for sp in species]
         if "mouse" in species and "human" in species:
             homology = pd.read_csv("../data/homology/MouseHumanHomology.csv")
-
+        else:
+            raise ValueError("Only mouse and human homology is known by default")
+    elif len(set(species)) == 1:
+        homology = pd.DataFrame({species[0]:list(allGenes)})
     geneSpecDict = []
     for i, adata in enumerate(adatas):
         try:
