@@ -5,7 +5,9 @@
 import os
 import sys
 import time
+import pickle
 import warnings
+
 import pandas as pd
 import numpy as np
 import scanpy as sc
@@ -50,14 +52,14 @@ def makeScVital(
 	batchLabel (str): Label for batch processing.
 	miniBatchSize (int, optional): Size of mini-batches for training. Default is 512.
 	numEpoch (int, optional): Number of epochs for training. Default is 64.
-	learningRate (float, optional): Learning rate for the optimizer. Default is 3e-1.
+	learningRate (float, optional): Learning rate for the optimizer. Default is 1e-3.
 	hid1 (int, optional): Number of units in the first hidden layer. Default is 1024.
 	hid2 (int, optional): Number of units in the second hidden layer. Default is 128.
 	latentSize (int, optional): Size of the latent space. Default is 12.
 	discHid (int, optional): Number of units in the discriminator hidden layer. Default is 6.
-	reconCoef (float, optional): Coefficient for reconstruction loss. Default is 1.
+	reconCoef (float, optional): Coefficient for reconstruction loss. Default is 2e1.
 	klCoef (float, optional): Coefficient for KL divergence loss. Default is 1e-1.
-	discCoef (float, optional): Coefficient for discriminator loss. Default is 1.
+	discCoef (float, optional): Coefficient for discriminator loss. Default is 1e0.
 	discIter (int, optional): Number of iterations for discriminator training. Default is 5.
 	earlyStop (float, optional): Delta error to trigger early stopping. Default is 1e-2.
 	seed (int, optional): Random seed for reproducibility. Default is 18.
@@ -608,7 +610,32 @@ class scVitalModel(object):
 			f"inDiscriminatorDims: {self.__inDiscriminatorDims}")
 
 
+	def save_model(model, filename):
+		"""
+		Save the scVitalModel object to a file.
 
+		Parameters:
+		model (scVitalModel): The model object to save.
+		filename (str): The name of the file to save the model to.
+		"""
+		with open(filename, 'wb') as file:
+			pickle.dump(model, file)
+		print(f"Model saved to {filename}")
+
+	def load_model(filename):
+		"""
+		Load the scVitalModel object from a file.
+
+		Parameters:
+		filename (str): The name of the file to load the model from.
+
+		Returns:
+		scVitalModel: The loaded model object.
+		"""
+		with open(filename, 'rb') as file:
+			model = pickle.load(file)
+		print(f"Model loaded from {filename}")
+		return model
 
 
 
