@@ -57,7 +57,6 @@ def mergeAdatas(adatas, homology=None, species=None, names=None, label="dataset"
                 adata.obs["species"] = pd.Categorical(["unk"] * len(adata.obs_names))
         allGenes.update(list(adata.var_names.values))
 
-    print(species)
     if homology is None and len(set(species)) > 1:
         warnings.warn("No homology given, inferring them")
         if species is None:

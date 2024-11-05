@@ -17,32 +17,51 @@ import matplotlib.patches as patches
 import textwrap
 
 
-def plotHVG():
-    minMean = 0.05
-    maxMean = 2.9
-    minDisp = 0.25
+def plotHVG(adata, minMean = 0.05, maxMean = 2.9, minDisp = 0.25, batchKey=None):
+	fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
-    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+	means = adata.var[["means"]][adata.var[["means"]] > np.exp(-14)]#adata.var[["means"]],
+	axs[0].hist(np.log(means), bins=100)#, log=True),
+	axs[0].axvline(np.log(minMean), color='k', linestyle='dashed', linewidth=1)
+	axs[0].axvline(np.log(maxMean), color='k', linestyle='dashed', linewidth=1)
+	axs[0].set_title('Gene means counts')
+	axs[0].set_xlabel('means')
+	axs[0].set_ylabel('counts')
 
-    means = adata.var[["means"]][adata.var[["means"]] > np.exp(-14)]#adata.var[["means"]],
-    axs[0].hist(np.log(means), bins=100)#, log=True),
-    axs[0].axvline(np.log(minMean), color='k', linestyle='dashed', linewidth=1)
-    axs[0].axvline(np.log(maxMean), color='k', linestyle='dashed', linewidth=1)
-    axs[0].set_title('Gene means counts')
-    axs[0].set_xlabel('means')
-    axs[0].set_ylabel('counts')
+	dispNorm = adata.var[["dispersions_norm"]][adata.var[["dispersions_norm"]] > np.exp(-8)]#adata.var[["means"]],
+	axs[1].hist(np.log(dispNorm), bins=100)#, log=True),
+	axs[1].axvline(np.log(minDisp), color='k', linestyle='dashed', linewidth=1)
+	axs[1].set_title('Gene dispersions counts')
+	axs[1].set_xlabel('dispersions')
+	axs[1].set_ylabel('counts')
 
-    dispNorm = adata.var[["dispersions_norm"]][adata.var[["dispersions_norm"]] > np.exp(-8)]#adata.var[["means"]],
-    axs[1].hist(np.log(dispNorm), bins=100)#, log=True),
-    axs[1].axvline(np.log(minDisp), color='k', linestyle='dashed', linewidth=1)
-    axs[1].set_title('Gene dispersions counts')
-    axs[1].set_xlabel('dispersions')
-    axs[1].set_ylabel('counts')
+	sc.pp.highly_variable_genes(adata, min_disp=minDisp, min_mean=minMean, max_mean=maxMean, batch_key=batchKey)
+	print(sum(adata.var.highly_variable))
+	if"highly_variable_intersection" in adata.var.names :
+		print(sum(adata.var.highly_variable_intersection))
 
-    sc.pp.highly_variable_genes(adata, min_disp=minDisp, min_mean=minMean, max_mean=maxMean, batch_key=batchKey)
-    print(sum(adata.var.highly_variable))
-    print(sum(adata.var.highly_variable_intersection))
 
+
+def plotLoss(lossDict, save=False):
+	lossFig, lossAxs = plt.subplots(3, 2)
+	lossAxs[0, 0].plot(lossDict["recon"]),
+	lossAxs[0, 0].set_title('Recon Loss')
+
+	lossAxs[1, 0].plot(lossDict["discr"])
+	lossAxs[1, 0].set_title('Disc Loss')
+
+	lossAxs[0, 1].plot(lossDict["trick"])
+	lossAxs[0, 1].set_title('Trick Disc Loss')
+
+	lossAxs[1, 1].plot(lossDict["klDiv"])
+	lossAxs[1, 1].set_title('KL Div Loss')
+
+	lossAxs[2, 0].plot(lossDict["total"])
+	lossAxs[2, 0].set_title('Total Loss')
+	
+	lossFig.tight_layout(pad=1.0)
+	if(save):
+		lossFig.savefig("f{save}/lossPlots.png")
 
 def vizStats(statFile):
 	stats = pd.read_csv(statFile,usecols=[1,2]).T

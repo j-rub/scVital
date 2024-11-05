@@ -10,14 +10,17 @@
 [db]: https://img.shields.io/pypi/dm/scVital?label=pypi%20downloads
 
 
+![scVial workflow](https://github.com/j-rub/scVital/tree/main/images/scVitalWorkflow.png)
+
+
 # scVital
 
-scVital is a powerful tool designed for the integration and analysis of single-cell RNA sequencing (scRNA-seq) data from multiple species. It leverages deep learning techniques to harmonize datasets, enabling comprehensive comparative analyses and insights into conserved and species-specific cellular processes.
+scVital is a powerful tool designed for the integration and analysis of single-cell RNA sequencing (scRNA-seq) data from multiple species. It leverages deep learning techniques to integrate datasets, enabling comprehensive comparative analyses and insights into conserved and species-specific cell states.
+
 
 ## Features
 
 - **Cross-Species Data Integration**: Seamlessly integrate scRNA-seq data from different species.
-- **Robust Data Preprocessing**: Includes normalization and highly variable gene selection.
 - **Deep Learning Models**: Utilizes autoencoders and discriminators for effective data integration.
 - **Comprehensive Evaluation Metrics**: Evaluate model performance using latent space similarity, UMAP visualization, cluster identification, and more.
 - **User-Friendly Interface**: Easy to use with detailed documentation and examples.
@@ -142,3 +145,5 @@ sc.pl.umap(adata, color = ["species",neighborsKey,"cell_annotation"], ncols = 2)
 ```
 
 
+
+README made with the help of copilot.

@@ -228,11 +228,7 @@ class scVitalModel(object):
 		discriminatorLossFunc = torch.nn.CrossEntropyLoss()
 
 		# Train the model
-		lossDict = self._trainScVital(autoencoderOpt, reconstructionLossFunc, aeSchedLR, discriminatorOpt, discriminatorLossFunc, discSchedLR)
-
-		#self.__autoencoder = autoencoderOut
-		#self.__discriminator = discriminatorOut
-		self.__lossDict = lossDict
+		self._trainScVital(autoencoderOpt, reconstructionLossFunc, aeSchedLR, discriminatorOpt, discriminatorLossFunc, discSchedLR)
 
 		# Set models to evaluation mode
 		self.__autoencoder.eval()
@@ -382,13 +378,12 @@ class scVitalModel(object):
 			#aeSchedLR.step()
 			#discSchedLR.step()
 
-		lossDict = {"total":aeTotalEpochLoss,
+		self.__lossDict = {"total":aeTotalEpochLoss,
 					"recon":reconstEpochLoss,
 					"trick":trickEpochLoss,
 					"klDiv":klDivEpochLoss,
 					"discr":discEpochLoss}
-
-		return(lossDict)
+		#return
 
 
 	def _getLabeledData(self, inData):
@@ -513,8 +508,6 @@ class scVitalModel(object):
 
 		return inData, batchSpecLabIndex
 
-
-
 	def saveDiscrim(self, outDiscFile):
 		"""Save the discriminator to file."""
 		torch.save(self.__discriminator, outDiscFile)
@@ -610,7 +603,7 @@ class scVitalModel(object):
 			f"inDiscriminatorDims: {self.__inDiscriminatorDims}")
 
 
-	def save_model(model, filename):
+	def saveModel(self, filename):
 		"""
 		Save the scVitalModel object to a file.
 
@@ -619,28 +612,46 @@ class scVitalModel(object):
 		filename (str): The name of the file to save the model to.
 		"""
 		with open(filename, 'wb') as file:
-			pickle.dump(model, file)
+			pickle.dump(self, file)
 		print(f"Model saved to {filename}")
 
-	def load_model(filename):
-		"""
-		Load the scVitalModel object from a file.
 
-		Parameters:
-		filename (str): The name of the file to load the model from.
+	def plotLoss(self, save=False):
+		lossFig, lossAxs = plt.subplots(3, 2)
+		lossAxs[0, 0].plot(self.__lossDict["recon"]),
+		lossAxs[0, 0].set_title('Recon Loss')
 
-		Returns:
-		scVitalModel: The loaded model object.
-		"""
-		with open(filename, 'rb') as file:
-			model = pickle.load(file)
-		print(f"Model loaded from {filename}")
-		return model
+		lossAxs[0, 1].plot(self.__lossDict["discr"])
+		lossAxs[0, 1].set_title('Disc Loss')
+
+		lossAxs[1, 1].plot(self.__lossDict["trick"])
+		lossAxs[1, 1].set_title('Trick Disc Loss')
+
+		lossAxs[1, 0].plot(self.__lossDict["klDiv"])
+		lossAxs[1, 0].set_title('KL Div Loss')
+
+		lossAxs[2, 0].plot(self.__lossDict["total"])
+		lossAxs[2, 0].set_title('Total Loss')
+
+		lossFig.tight_layout(pad=1.0)
+		if(save):
+			lossFig.savefig("f{save}/lossPlots.png")
 
 
+def loadModel(filename):
+	"""
+	Load the scVitalModel object from a file.
 
+	Parameters:
+	filename (str): The name of the file to load the model from.
 
-
+	Returns:
+	scVitalModel: The loaded model object.
+	"""
+	with open(filename, 'rb') as file:
+		scvitalModel = pickle.load(file)
+	print(f"Model loaded from {filename}")
+	return scvitalModel
 
 
 
