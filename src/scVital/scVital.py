@@ -13,6 +13,7 @@ import numpy as np
 import scanpy as sc
 import anndata as an
 from scipy.sparse import isspmatrix
+from matplotlib import pyplot as plt
 
 
 import torch
@@ -611,6 +612,8 @@ class scVitalModel(object):
 		model (scVitalModel): The model object to save.
 		filename (str): The name of the file to save the model to.
 		"""
+		if(filename[-4:] != ".pkl"):
+			filename = filename + ".pkl"
 		with open(filename, 'wb') as file:
 			pickle.dump(self, file)
 		print(f"Model saved to {filename}")
@@ -635,7 +638,7 @@ class scVitalModel(object):
 
 		lossFig.tight_layout(pad=1.0)
 		if(save):
-			lossFig.savefig("f{save}/lossPlots.png")
+			lossFig.savefig(f"{save}/lossPlots.png")
 
 
 def loadModel(filename):

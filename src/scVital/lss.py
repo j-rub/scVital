@@ -17,7 +17,7 @@ import matplotlib.patches as patches
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
 
-from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve, auc
 from scipy.spatial.distance import squareform
 from scipy.cluster.hierarchy import linkage
 from scipy.cluster import hierarchy 
@@ -61,9 +61,10 @@ def calcAUC(clustDist, realPairs):
         labelTrue[i, j] = 1
     # Flatten the matrices for AUC calculation
     labelPred = simpDist.flatten()
-    labelTrue = np.triu(labelTrue).flatten()
-    # Calculate and return AUC score
-    return roc_auc_score(labelTrue, labelPred)
+    labelTrueF = np.triu(labelTrue).flatten()
+    # Calculate and return AUC of F1 score
+    precision, recall, thresholds = precision_recall_curve(labelTrueF, labelPred)
+	return(auc(recall, precision))    #auc=roc_auc_score(labelTrue, labelPred)
 
 def calcClustDist(adata, latent, allCellTypes, batchName, cellTypeLabel):
     # Initialize cluster distance matrix

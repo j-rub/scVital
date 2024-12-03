@@ -42,27 +42,6 @@ def plotHVG(adata, minMean = 0.05, maxMean = 2.9, minDisp = 0.25, batchKey=None)
 
 
 
-def plotLoss(lossDict, save=False):
-	lossFig, lossAxs = plt.subplots(3, 2)
-	lossAxs[0, 0].plot(lossDict["recon"]),
-	lossAxs[0, 0].set_title('Recon Loss')
-
-	lossAxs[1, 0].plot(lossDict["discr"])
-	lossAxs[1, 0].set_title('Disc Loss')
-
-	lossAxs[0, 1].plot(lossDict["trick"])
-	lossAxs[0, 1].set_title('Trick Disc Loss')
-
-	lossAxs[1, 1].plot(lossDict["klDiv"])
-	lossAxs[1, 1].set_title('KL Div Loss')
-
-	lossAxs[2, 0].plot(lossDict["total"])
-	lossAxs[2, 0].set_title('Total Loss')
-	
-	lossFig.tight_layout(pad=1.0)
-	if(save):
-		lossFig.savefig("f{save}/lossPlots.png")
-
 def vizStats(statFile):
 	stats = pd.read_csv(statFile,usecols=[1,2]).T
 	vizStatsDF(stats, statFile)

@@ -196,16 +196,6 @@ def getClusterMetricDF(labels_true, labels, neighborsKey):
 	metricDF = pd.DataFrame(metricOut, columns=[neighborsKey], index=list(metricDict.keys()))
 	return(metricDF)
 
-def changeFileName(inFile, param, paramVal, pramSplit="_", valSplit = "~"):
-	newFileName = ""
-	for x in inFile.split(pramSplit):
-		partFile = valSplit
-		k = x.split(valSplit)
-		if (k[0]==param):
-			k[1] = str(paramVal)
-		together = valSplit.join(k)
-		newFileName = newFileName+pramSplit+together
-	return(newFileName[1:])
 
 def heirSimi(adata, latent, cellLabel, allCellTypes, clustMet = "cosine"):
 	latLen = range(adata.obsm[latent].shape[1])
@@ -345,19 +335,6 @@ def plot_results_table(df, show = False, save_dir = None):
         plt.close(fig)
     return tab
 
-
-
-#expTotal = 8
-#for j,prop in enumerate(gProp):
-#	valProp = np.round(prop)
-#	sumProp = sum(valProp)
-#	if(not sumProp == expTotal):
-#		diff = expTotal - sumProp
-#		ind = np.arange(len(valProp))
-#		np.random.shuffle(ind)
-#		for i in range(abs(diff).astype(int)):
-#			valProp[ind[i]] = valProp[ind[i]] + 1*np.sign(diff)
-#	gProp[j] = valProp
 
 
 
