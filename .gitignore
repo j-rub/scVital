@@ -1,6 +1,9 @@
 data/*
 !data/homology 
 
+vignettes/*.pkl
+vignettes/mhMuscleScVitalModel.pkl
+
 # Created by https://www.toptal.com/developers/gitignore/api/macos,python,jupyternotebooks
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,python,jupyternotebooks
 
