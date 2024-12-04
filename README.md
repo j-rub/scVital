@@ -144,6 +144,25 @@ sc.pl.umap(adata, color = ["species",neighborsKey,"cell_annotation"], ncols = 2)
 
 ```
 
+### Future Improvements for scVital
+
+1. **Additional Discriminator**:
+   - Address inter-patient heterogeneity to reduce batch effects when integrating human data.
+     - One discriminator to remove **patient** batch effect.
+     - One discriminator to remove **species** batch effect.
+   - Enhance integration when multiple human patients are involved.
+
+2. **Use Reconstructed Output Data as Imputed Data**:
+   - Utilize imputed gene expression data for further downstream analysis, including differential gene expression.
+      - Overcome gene dropout in scRNA-seq data.
+
+3. **Expand to Perform Cell Clustering**:
+   - Add an output softmax clustering layer to the latent space.
+       - Identify cell states without needing Leiden clustering after training.
+
+4. **Utilize GPUs to Speed Up the Process**:
+   - Implement GPU acceleration to enhance processing speed and efficiency.
+       - Possibly use NVIDIA rapids 
 
 
 README made with the help of copilot.
