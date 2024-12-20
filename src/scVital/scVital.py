@@ -22,8 +22,8 @@ from torch.utils.data import DataLoader
 from torch import optim
 import torch.nn.functional as F
 
-from .AutoEncoder import EncoderDecoder, Encoder,Decoder
-from .Discriminator import Discriminator
+from .autoencoder import EncoderDecoder, Encoder, Decoder
+from .discriminator import Discriminator
 
 def makeScVital(
 	adata: an.AnnData,

@@ -1,4 +1,4 @@
-from .scVitalModel import makeScVital, scVitalModel, loadModel
+from .scVital import makeScVital, scVitalModel, loadModel
 #from .lss import calcPairsLSS, calcLSS, calcAUC, calcClustDist, calcTotalDist
 #from .merging import mergeAdatas
 
