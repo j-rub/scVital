@@ -25,7 +25,7 @@ dependencies = [
     "scanpy",
     "torch",
     "scipy",
-    "sklearn",
+    "scikit-learn",
     "matplotlib",
     "networkx"
 ]
