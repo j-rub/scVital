@@ -22,8 +22,8 @@ from torch.utils.data import DataLoader
 from torch import optim
 import torch.nn.functional as F
 
-import scVital.autoencoder as ae
-import scVital.discriminator as dis 
+import autoencoder as ae
+import discriminator as dis 
 
 
 def makeScVital(
