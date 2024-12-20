@@ -1,5 +1,3 @@
-#https://bastings.github.io/annotated_encoder_decoder/
-
 import torch
 from torch import nn
 import torch.nn.functional as F

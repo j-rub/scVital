@@ -21,3 +21,4 @@ class Discriminator(nn.Module):
         x = self.hidden1(x)
         #x = self.out(x)
         return x
+        

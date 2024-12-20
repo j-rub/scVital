@@ -22,9 +22,8 @@ from torch.utils.data import DataLoader
 from torch import optim
 import torch.nn.functional as F
 
-import autoencoder as ae
-import discriminator as dis 
-
+from autoencoder import EncoderDecoder, Encoder,Decoder
+from discriminator import Discriminator
 
 def makeScVital(
 	adata: an.AnnData,
@@ -192,14 +191,14 @@ class scVitalModel(object):
 		self.__reconCoef = self.__reconCoef * (inData.shape[0] ** 0.5)
 
 		# Initialize encoder and decoder
-		encoder = ae.Encoder(self.__layerDims, self.__numSpeices)
-		decoder = ae.Decoder(self.__layerDims, self.__numSpeices, geneIndexes=batchSpecLabIndex)
+		encoder = Encoder(self.__layerDims, self.__numSpeices)
+		decoder = Decoder(self.__layerDims, self.__numSpeices, geneIndexes=batchSpecLabIndex)
 
 		# Initialize autoencoder
-		self.__autoencoder = ae.EncoderDecoder(encoder, decoder)
+		self.__autoencoder = EncoderDecoder(encoder, decoder)
 	
 		# Initialize discriminator
-		self.__discriminator = dis.Discriminator(self.__inDiscriminatorDims, self.__numSpeices)
+		self.__discriminator = Discriminator(self.__inDiscriminatorDims, self.__numSpeices)
 
 	def runTrainScVital(self):
 		"""

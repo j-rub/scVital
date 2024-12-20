@@ -4,7 +4,7 @@ from .scVital import makeScVital, scVitalModel, loadModel
 
 from . import lss as lss
 from . import merging as mg
-from . import autoencoder
-from . import discriminator
+from . import autoencoder as ae
+from . import discriminator as dis
 
-__all__ = ['makeScVital', 'scVitalModel', "loadModel", "lss", "mg"]
+__all__ = ['makeScVital', 'scVitalModel', "loadModel", "lss", "mg", "ae", "dis"]
