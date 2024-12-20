@@ -23,8 +23,9 @@ jobs:
         pip install hatch
         hatch env create
       # hatch env run pip install -e .
-    - name: Run tests
+    - name: Test pwd
       run: echo pwd
+    - name: Run tests
       run: hatch env run pytest
 
   build:
