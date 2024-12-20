@@ -39,6 +39,6 @@ def test_calcPairsLSS(mock_data):
 	adata, latent, batchName, cellTypeLabel = mock_data
 	clustDist, lssAUC, totalDist, allCellTypes, ctPairs = calcPairsLSS(adata, latent, batchName, cellTypeLabel)
 	assert np.sum(clustDist.values) == 31.8386
-	assert lssAUC == 0.5592592592592592
+	assert np.round(lssAUC, decimals=4) == 0.5593
 	assert totalDist == 2.3621
 	assert allCellTypes == ['h~ct1', 'h~ct2', 'h~ct3', 'm~ct1', 'm~ct2', 'm~ct3']

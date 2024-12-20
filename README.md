@@ -144,7 +144,7 @@ sc.pl.umap(adata, color = ["species",neighborsKey,"cell_annotation"], ncols = 2)
 
 ```
 
-### Future Improvements for scVital
+## Future Improvements for scVital
 
 1. **Additional Discriminator**:
    - Address inter-patient heterogeneity to reduce batch effects when integrating human data.

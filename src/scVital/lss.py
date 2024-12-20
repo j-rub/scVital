@@ -64,7 +64,7 @@ def calcAUC(clustDist, realPairs):
     labelTrueF = np.triu(labelTrue).flatten()
     # Calculate and return AUC of F1 score
     precision, recall, thresholds = precision_recall_curve(labelTrueF, labelPred)
-	return(auc(recall, precision))    #auc=roc_auc_score(labelTrue, labelPred)
+    return(auc(recall, precision))    #auc=roc_auc_score(labelTrue, labelPred)
 
 def calcClustDist(adata, latent, allCellTypes, batchName, cellTypeLabel):
     # Initialize cluster distance matrix
