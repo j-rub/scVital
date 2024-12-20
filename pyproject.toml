@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "scVital"
 version = "0.1.0"
 authors = [
-  { name="Jonathan Rub", orcid = "0000-0001-8086-2310", email="jor4008@med(dot)cornell.edu"},
+  { name="Jonathan Rub", orcid = "0000-0001-8086-2310", email="jor4008@medDOTcornell.edu"},
 ]
 description = "Deep Learning Algorithm for cross-species integration of scRNA-seq data"
 readme = "README.md"
