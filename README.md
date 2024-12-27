@@ -10,7 +10,11 @@
 [db]: https://img.shields.io/pypi/dm/scVital?label=pypi%20downloads
 
 
-![scVial workflow](https://github.com/j-rub/scVital/tree/main/images/scVitalWorkflow.png)
+![scVial workflow](https://github.com/j-rub/scVital/blob/main/images/scVitalWorkflow.png)
+
+
+Read the pre-print! [A deep-learning tool for species-agnostic integration of cancer cell states
+](https://www.biorxiv.org/content/10.1101/2024.12.20.629285v1)
 
 
 # scVital
