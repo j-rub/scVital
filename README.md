@@ -70,11 +70,11 @@ Let's say you want to download and install a package from a GitHub release:
 
 1. **Navigate to the repository**: `https://github.com/j-rub/scVital`
 2. **Go to the Releases section**: `https://github.com/j-rub/scVital/releases`
-3. **Download the release**: Click on `scVital-1.0.0.zip` to download it.
+3. **Download the release**: Click on `scVital-v1.0.1.zip` to download it.
 4. **Install the package**:
 
    ```bash
-   pip install ~/Downloads/scVital-1.0.0.zip
+   pip install ~/Downloads/scVital-1.0.1.zip
    ```
 
 ## Usage Example
@@ -108,15 +108,15 @@ adata = adata[:, np.logical_and(adata.var.highly_variable, np.logical_not(adata.
 setupData = {
     'adata': adata,
     'batchLabel': 'species',
-    'miniBatchSize': 1024,
-    'numEpoch': 50,
+    'miniBatchSize': 128,
+    'numEpoch': 36,
     'learningRate': 1e-3,
     'hid1': 1024,
     'hid2': 128,
     'latentSize': 12,
     'discHid': 6,
-    'reconCoef': 2e0,
-    'klCoef': 5e-2,
+    'reconCoef': 1e1,
+    'klCoef': 5e-1,
     'discCoef': 1e0,
     'discIter': 5,
     'earlyStop': 1e-2,
