@@ -131,7 +131,9 @@ def getUniCtPairs(adata, batchName, labelName):
             name2, ct2 = p2.split(sep)
             if(((ct1==ct2) or ((ct1,ct2) in pairs or (ct2,ct1) in pairs)) and (name1 != name2)):
                 ctPairs = ctPairs + [[p1, p2]]
-
+            elif((ct1!=ct2) and ((ct1,ct2) in pairs or (ct2,ct1) in pairs) and (name1 == name2)):
+                ctPairs = ctPairs + [[p1, p2]]
+                
     return(allCt, ctPairs)
 
 
@@ -240,8 +242,9 @@ def plotHeatLSS(adata, clustDist, latent, allCellTypes, ctPairs, plot=True, save
     if(save): #save
         cdMap.savefig(f"{save}/Clmap_{latent}.svg")
 
-def plotGraphLSS(adata, cellTypeLabel, batchName, clustDist, name="", ctColors=plt.get_cmap('tab10').colors, btColors=None, shapes="ospx^><.....", prog="neato", wLab=False, qCut = 0.28, plot=True, save=False):
-    batchDict, annoToColorDict = __getBatchCellDicts(adata, cellTypeLabel, batchName, ctColors, btColors, shapes)
+def plotGraphLSS(adata, cellTypeLabel, batchName, clustDist, name="", batchDict=None, annoToColorDict=None, ctColors=plt.get_cmap('tab10').colors, btColors=None, shapes="ospx^><.....", prog="neato", wLab=False, qCut = 0.28, plot=True, save=False):
+    if(batchDict==None and annoToColorDict==None):
+        batchDict, annoToColorDict = __getBatchCellDicts(adata, cellTypeLabel, batchName, ctColors, btColors, shapes)
 
     overlap = np.unique(adata.obs[cellTypeLabel])
     pairs = adata.uns["pairs"]

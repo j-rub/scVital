@@ -73,12 +73,14 @@ def mergeAdatas(adatas, homology=None, species=None, names=None, label="dataset"
         try:
             if csr_matrix.max(adata.X) - csr_matrix.min(adata.X) > 20:
                 warnings.warn("Data not log normalized, calculating now")
+                adata.layers["counts"] = adata.X
                 sc.pp.normalize_total(adata, target_sum=1e4)
                 sc.pp.log1p(adata)
                 #warnings.warn(f"Post-normalization range: {csr_matrix.max(adata.X) - csr_matrix.min(adata.X)}")
         except:
             if np.max(adata.X) - np.min(adata.X) > 20:
                 warnings.warn("Data not log normalized, calculating now")
+                adata.layers["counts"] = adata.X
                 sc.pp.normalize_total(adata, target_sum=1e4)
                 sc.pp.log1p(adata)
                 #warnings.warn(f"Post-normalization range: {np.max(adata.X) - np.min(adata.X)}")
